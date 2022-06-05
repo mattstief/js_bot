@@ -2,10 +2,10 @@
   "name": "js_bot",
   "version": "1.0.0",
   "description": "discord music bot",
-  "main": "index.js",
+  "main": "index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon index.ts"
+    "dev": "nodemon --verbose --signal SIGINT index.ts"
   },
   "repository": {
     "type": "git",
@@ -27,8 +27,6 @@
   "dependencies": {
     "discord.js": "^13.7.0",
     "dotenv": "^16.0.1",
-    "gitignore": "^0.7.0",
-    "nodemon": "^2.0.16",
-    "ytdl": "^1.4.1"
+    "nodemon": "^2.0.16"
   }
 }

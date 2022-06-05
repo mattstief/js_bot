@@ -1,4 +1,4 @@
-import DiscordJS, { ClientUser, Intents } from 'discord.js'
+import DiscordJS, { Intents } from 'discord.js'
 import dotenv from 'dotenv'
 
 dotenv.config()
@@ -25,7 +25,7 @@ client.on('ready', () => {
 
     commands?.create({
         name: 'ping',
-        description: 'replies pong',
+        description: 'replies pong '
     })
 })
 
@@ -38,8 +38,8 @@ client.on('interactionCreate', async (interaction) => {
 
     if (commandName === 'ping') {
         interaction.reply ({
-            content: 'pong',
-            ephemeral: true,
+            content: 'pongers',
+            ephemeral: true
         })
     }
 })
