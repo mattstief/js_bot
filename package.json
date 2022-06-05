@@ -4,7 +4,8 @@
   "description": "discord music bot",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index.ts"
   },
   "repository": {
     "type": "git",
@@ -27,6 +28,7 @@
     "discord.js": "^13.7.0",
     "dotenv": "^16.0.1",
     "gitignore": "^0.7.0",
+    "nodemon": "^2.0.16",
     "ytdl": "^1.4.1"
   }
 }
