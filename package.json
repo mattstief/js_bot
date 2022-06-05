@@ -1,0 +1,32 @@
+{
+  "name": "js_bot",
+  "version": "1.0.0",
+  "description": "discord music bot",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/mattstief/js_bot.git"
+  },
+  "keywords": [
+    "music",
+    "discord",
+    "bot",
+    "js",
+    "javascript"
+  ],
+  "author": "Matt Stieferman",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mattstief/js_bot/issues"
+  },
+  "homepage": "https://github.com/mattstief/js_bot#readme",
+  "dependencies": {
+    "discord.js": "^13.7.0",
+    "dotenv": "^16.0.1",
+    "gitignore": "^0.7.0",
+    "ytdl": "^1.4.1"
+  }
+}
