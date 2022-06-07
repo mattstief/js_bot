@@ -10,11 +10,11 @@ import DiscordJS, { Client, VoiceChannel, Intents } from 'discord.js';
 // } from '@discordjs/voice'
 import dotenv from 'dotenv'
 import ytdl from 'ytdl-core'
-import fs from 'fs'
+import * as fs from 'fs'
 
 const title_length: number = 10
 const ytdl_options: ytdl.downloadOptions = {filter: 'audioonly'}
-const musicDir:     String = 'music/'
+const musicDir:     string = 'music/'
 
 dotenv.config()
 
@@ -37,7 +37,8 @@ client.on('ready', () => {
     } else {
         commands = client.application?.commands
     }
-
+    //make music directory if it doesn't exist
+    makeMusicDirectory()
     commands?.create({
         name: 'ping',
         description: 'replies pong '
@@ -113,6 +114,18 @@ function downloadFromURL(url: string, fileName: string) {
     a.on('finish', () => { 
         console.log('download \"' + fileName + '\" finished') 
         return
+    })
+}
+
+function makeMusicDirectory() {
+    fs.mkdir(musicDir, (err) => {
+        if (err && err.code == 'EEXIST') {
+            console.log('music directory already exists')
+        } else if (err){
+            console.log(err.code)
+        } else {
+            console.log('path \"' + musicDir + '\" not found. Created directory.')
+        }
     })
 }
 
