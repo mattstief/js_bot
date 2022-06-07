@@ -3,4 +3,4 @@ Discord music bot made with discordJs
 
 # contributors
 Matthew Stieferman  mstieferman@gmail.com  
-Leslie Gurolla
+Leslie Gurrola leslie.gurrola85@gmail.com 
