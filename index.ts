@@ -1,5 +1,18 @@
-import DiscordJS, { Intents } from 'discord.js'
+import DiscordJS, { Client, VoiceChannel, Intents } from 'discord.js';
+// import {
+// 	joinVoiceChannel,
+// 	createAudioPlayer,
+// 	createAudioResource,
+// 	entersState,
+// 	StreamType,
+// 	AudioPlayerStatus,
+// 	VoiceConnectionStatus,
+// } from '@discordjs/voice'
 import dotenv from 'dotenv'
+import ytdl from 'ytdl-core'
+import fs from 'fs'
+
+const title_length = 10
 
 dotenv.config()
 
@@ -27,6 +40,21 @@ client.on('ready', () => {
         name: 'ping',
         description: 'replies pong '
     })
+    commands?.create({
+        name: 'play',
+        description: 'plays a song with name as an argument',
+        options: [
+            {
+                name: 'link_or_name',
+                description: 'the link or name of the song',
+                required: true,
+                type: DiscordJS.Constants.ApplicationCommandOptionTypes.STRING
+            }//,
+            //{
+            //     name: 'volume',
+            //}
+        ]
+    })
 })
 
 client.on('interactionCreate', async (interaction) => {
@@ -42,19 +70,35 @@ client.on('interactionCreate', async (interaction) => {
             ephemeral: true
         })
     }
-})
+    if(commandName === 'play') { 
+        interaction.reply({
+            content: 'playing',
+            ephemeral: false
+        })
+        if (options) {
+            const arg1 = options.getString('link_or_name')
+            if (arg1){
+                console.log(arg1)
+                //file name should be the first x chars of the video title
+                ytdl.getInfo(arg1).then(info => {
+                    //TODO validate url ytdl.validateURL(url)
 
-// client.on('messageCreate', (message) => {
-//     if (message.content === 'ping') {
-//         message.reply({
-//             content: 'pong'
-//         })
-//     }
-//     if (message.content === '/play') {
-//         message.reply({
-//             content: 'pong'
-//         })
-//     }
-// })
+                    const fileName = info.videoDetails.title.substring(0, title_length) + '.mp3'
+                    console.log(fileName)
+                    //format video name here.... if you want to
+                    let a = ytdl (arg1, {filter: 'audioonly'}).pipe(fs.createWriteStream('music/' + fileName))
+                    a.on('finish', () => { 
+                       console.log('done') 
+                    })
+                    //find callers voice channel
+                    //join if not already in one
+                    //play audio from file
+                })
+                
+            }
+        }
+
+    }
+})
 
 client.login(process.env.TOKEN)

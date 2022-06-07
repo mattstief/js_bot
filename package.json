@@ -5,7 +5,7 @@
   "main": "index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon --verbose --signal SIGINT index.ts"
+    "dev": "nodemon --verbose --signal SIGINT --ignore music/ index.ts"
   },
   "repository": {
     "type": "git",
@@ -25,8 +25,11 @@
   },
   "homepage": "https://github.com/mattstief/js_bot#readme",
   "dependencies": {
+    "@discordjs/opus": "^0.5.3",
+    "@discordjs/voice": "github:discordjs/voice",
     "discord.js": "^13.7.0",
     "dotenv": "^16.0.1",
-    "nodemon": "^2.0.16"
+    "nodemon": "^2.0.16",
+    "ytdl": "^1.4.1"
   }
 }
