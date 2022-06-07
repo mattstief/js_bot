@@ -2,10 +2,10 @@
   "name": "js_bot",
   "version": "1.0.0",
   "description": "discord music bot",
-  "main": "index.ts",
+  "main": "src/index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon --verbose --signal SIGINT --ignore music/ index.ts"
+    "dev": "nodemon --verbose --signal SIGINT --ignore music/ src/index.ts"
   },
   "repository": {
     "type": "git",
