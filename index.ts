@@ -12,7 +12,9 @@ import dotenv from 'dotenv'
 import ytdl from 'ytdl-core'
 import fs from 'fs'
 
-const title_length = 10
+const title_length: number = 10
+const ytdl_options: ytdl.downloadOptions = {filter: 'audioonly'}
+const musicDir:     String = 'music/'
 
 dotenv.config()
 
@@ -70,35 +72,48 @@ client.on('interactionCreate', async (interaction) => {
             ephemeral: true
         })
     }
-    if(commandName === 'play') { 
+    else if(commandName === 'play') { 
         interaction.reply({
             content: 'playing',
             ephemeral: false
         })
-        if (options) {
-            const arg1 = options.getString('link_or_name')
-            if (arg1){
-                console.log(arg1)
-                //file name should be the first x chars of the video title
-                ytdl.getInfo(arg1).then(info => {
-                    //TODO validate url ytdl.validateURL(url)
-
-                    const fileName = info.videoDetails.title.substring(0, title_length) + '.mp3'
-                    console.log(fileName)
-                    //format video name here.... if you want to
-                    let a = ytdl (arg1, {filter: 'audioonly'}).pipe(fs.createWriteStream('music/' + fileName))
-                    a.on('finish', () => { 
-                       console.log('done') 
-                    })
-                    //find callers voice channel
-                    //join if not already in one
-                    //play audio from file
-                })
-                
-            }
+        if (options == null) {
+            return
         }
+        const playArg = options.getString('link_or_name')
+        if (playArg == null) {
+            return
+        }
+        const isValidLink:boolean = ytdl.validateURL(playArg)
+        if (isValidLink) {  //download it, then play to vc
+            //check if link has already been downloaded before attempting download
+            const URL: string = playArg
+            ytdl.getInfo(playArg).then(info => {
+                const fileName = getFileName(info)
+                downloadFromURL(URL, fileName)
+            })
+        } else if (true){            //check if the title is in the music dir, play it if found
+            //search musicDir for fileName, play closest match
+        }
+        else {  //arg 'playArg' is not a valid link or title
 
+        }
     }
 })
+
+function getFileName(info: ytdl.videoInfo, fileExt: string = 'mp3', substring_len: number = title_length) {
+    const title = info.videoDetails.title
+    const titleSubstr = title.substring(0, substring_len)
+    const fileName = titleSubstr + '.' + fileExt
+    return fileName
+}
+
+function downloadFromURL(url: string, fileName: string) {
+    const a = ytdl (url, ytdl_options).pipe(fs.createWriteStream(musicDir + fileName))
+    a.on('finish', () => { 
+        console.log('download \"' + fileName + '\" finished') 
+        return
+    })
+}
 
 client.login(process.env.TOKEN)
