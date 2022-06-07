@@ -2,5 +2,5 @@
 Discord music bot made with discordJs
 
 # contributors
-Matthew Stieferman
+Matthew Stieferman  
 Leslie Gurolla
