@@ -13,14 +13,22 @@ import ytdl from 'ytdl-core'
 import { createDiscordJSAdapter } from './adapter'
 import * as fs from 'fs'
 
-const title_length: number = 10
-const ytdl_options: ytdl.downloadOptions = {filter: 'audioonly'}
-const musicDir:     string = 'music/'
-const guildId = '982793020736962581'
+const title_length  : number = 10
+const ytdl_options  : ytdl.downloadOptions = {filter: 'audioonly'}
+const musicDir      : string = 'music/'
 
 dotenv.config()
 
 const player = createAudioPlayer();
+
+function getGuildEnv() {
+    const guild = process.env.GUILD_ID
+    if (guild == null) {
+        console.log('No guild environment variable found. Exiting.')
+        process.exit(1)
+    }
+    return guild
+}
 
 function playSong() {
 	const resource = createAudioResource('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', {
@@ -57,15 +65,15 @@ const client = new DiscordJS.Client({
     ]
 })
 
-//const voice = new DiscordJS.VoiceChannel({})
-
-client.on('Ready', async () => {
-    console.log('ready!')
-    const guild = client.guilds.cache.get(guildId)
+client.on('ready', async () => {
+    makeMusicDirectory()
+    const guild = client.guilds.cache.get(getGuildEnv())
     let commands
     if (guild) {
+        console.log('guild found')
         commands = guild.commands
     } else {
+        console.log('no guild found')
         commands = client.application?.commands
     }
     try {
@@ -74,8 +82,8 @@ client.on('Ready', async () => {
 	} catch (error) {
 		console.error(error);
 	}
-    //make music directory if it doesn't exist
-    // makeMusicDirectory()
+    console.log('ready!')
+
     // commands?.create({
     //     name: 'ping',
     //     description: 'replies pong '
@@ -90,23 +98,34 @@ client.on('Ready', async () => {
     //             required: true,
     //             type: DiscordJS.Constants.ApplicationCommandOptionTypes.STRING,
     //         },
+    //         {
+    //             name: 'user',
+    //             description: 'the user to play the song for',
+    //             required: false,
+    //             type: DiscordJS.Constants.ApplicationCommandOptionTypes.USER,
+    //         }
     //     ]
     // })
 })
 
-client.on('message', async (message) => {
+client.on('messageCreate', async (message) => {
 	if (!message.guild) return;
 
-	if (message.content === '-join') {
+	if (message.content === '-') {
 		const channel = message.member?.voice.channel;
 
 		if (channel) {
 			try {
-                const voice = await channel.fetch(true)
+                const voice = await channel.fetch()
                 if (voice.type == 'GUILD_VOICE') {
                     const connection = await connectToChannel(voice);
-                    connection.subscribe(player);
-                    message.reply('Playing now!');
+                    let subscription = connection.subscribe(player);
+                    if (subscription) {
+                        console.log('subscribed to player')
+                    }
+                    else{
+                        console.log('failed to subscribe to player')
+                    }
                 }
 
 			} catch (error) {
@@ -120,11 +139,11 @@ client.on('message', async (message) => {
 
 // client.on('interactionCreate', async (interaction) => {
 //     if(!interaction.isCommand()) {
+//         //if (interaction.isMessageComponent())
+//         //do interesting things with the interaction
 //         return
 //     }
-
 //     const {commandName, options} = interaction
-
 //     if (commandName === 'ping') {
 //         interaction.reply ({
 //             content: 'pongers',
@@ -132,10 +151,8 @@ client.on('message', async (message) => {
 //         })
 //     }
 //     else if(commandName === 'play') { 
-//         //const callingUser = interaction.member
-//         //const vc = interaction.member?.guild.voice.channel
-//         const guild = client.guilds.cache.get(guildId)
-//         const vc = interaction.client.application?.owner?.id
+//         const guild = client.guilds.cache.get(getGuildEnv())
+//         console.log('interaction type:' + interaction.type)
 //         interaction.reply({
 //             content: 'playing',
 //             ephemeral: false
@@ -156,12 +173,12 @@ client.on('message', async (message) => {
 //                 downloadFromURL(URL, fileName)
 //             })
 //             try {
-// 				const connection = await connectToChannel(vc)
-// 				connection.subscribe(player);
-// 				interaction.reply('Playing now!');
-// 			} catch (error) {
-// 				console.error(error);
-// 			}
+//                 //const connection = await connectToChannel(vc)
+//                 //connection.subscribe(player);
+//                 interaction.reply('Playing now!');
+//             } catch (error) {
+//                 console.error(error);
+//             }
 
 //         } else if (true){            //check if the title is in the music dir, play it if found
 //             //search musicDir for fileName, play closest match
@@ -170,7 +187,6 @@ client.on('message', async (message) => {
 //             //play <link> <name>
 //             //play <song_title>
 //         }
-
 //     }
 // })
 
@@ -193,11 +209,11 @@ function downloadFromURL(url: string, fileName: string) {
 function makeMusicDirectory() {
     fs.mkdir(musicDir, (err) => {
         if (err && err.code == 'EEXIST') {
-            console.log('music directory already exists')
+            //music directory already exists
         } else if (err){
             console.log(err.code)
         } else {
-            console.log('path \"' + musicDir + '\" not found. Created directory.')
+            console.log('path \"' + musicDir + '\" not found. Created new directory.')
         }
     })
 }
