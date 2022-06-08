@@ -26,10 +26,18 @@
   "homepage": "https://github.com/mattstief/js_bot#readme",
   "dependencies": {
     "@discordjs/opus": "^0.5.3",
-    "@discordjs/voice": "github:discordjs/voice",
+    "@discordjs/voice": "^0.10.0",
+    "adapter": "^1.0.0-beta.10",
     "discord.js": "^13.7.0",
     "dotenv": "^16.0.1",
+    "ffmpeg": "^0.0.4",
+    "ffmpeg-static": "^4.4.1",
+    "libsodium-wrappers": "^0.7.10",
     "nodemon": "^2.0.16",
+    "opusscript": "^0.0.8",
+    "sodium": "^3.0.2",
+    "sodium-native": "^3.3.0",
+    "tweetnacl": "^1.0.3",
     "ytdl": "^1.4.1"
   }
 }
