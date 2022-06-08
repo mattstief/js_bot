@@ -108,6 +108,7 @@ client.on('message', async (message) => {
                     connection.subscribe(player);
                     message.reply('Playing now!');
                 }
+
 			} catch (error) {
 				console.error(error);
 			}
