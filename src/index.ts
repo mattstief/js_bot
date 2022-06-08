@@ -59,7 +59,7 @@ const client = new DiscordJS.Client({
 
 //const voice = new DiscordJS.VoiceChannel({})
 
-client.on('ready', async () => {
+client.on('Ready', async () => {
     console.log('ready!')
     const guild = client.guilds.cache.get(guildId)
     let commands
