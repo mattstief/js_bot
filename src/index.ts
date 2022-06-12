@@ -8,6 +8,7 @@ import {
 	AudioPlayerStatus,
 	VoiceConnectionStatus,
 } from '@discordjs/voice'
+import { SlashCommandBuilder } from '@discordjs/builders';
 import dotenv from 'dotenv'
 import ytdl from 'ytdl-core'
 import { createDiscordJSAdapter } from './adapter'
@@ -83,35 +84,43 @@ client.on('ready', async () => {
 		console.error(error);
 	}
     console.log('ready!')
-
+/*
     // commands?.create({
     //     name: 'ping',
-    //     description: 'replies pong '
+    //     description: 'ping'
     // })
-    // commands?.create({
-    //     name: 'play',
-    //     description: 'plays a song with name as an argument',
-    //     options: [
-    //         {
-    //             name: 'link_or_name',
-    //             description: 'the link or name of the song',
-    //             required: true,
-    //             type: DiscordJS.Constants.ApplicationCommandOptionTypes.STRING,
-    //         },
-    //         {
-    //             name: 'user',
-    //             description: 'the user to play the song for',
-    //             required: false,
-    //             type: DiscordJS.Constants.ApplicationCommandOptionTypes.USER,
-    //         }
-    //     ]
-    // })
+    // const playCmd = new SlashCommandBuilder()
+    //     .setName('play')
+    //     .setDescription('play a song')
+    //     .addStringOption((option) => //async (message: Message)
+    //         option
+    //             .setName('arg1')
+    //             .setDescription('link to a song or name of a song')
+    //             .setRequired(true)
+    //             .setAutocomplete(true)
+    // );
+    // if (playCmd ) {
+    //     commands?.(playCmd)
+    // }*/
+    
+    commands?.create({
+        name: 'play',
+        description: 'plays a song via link or name',
+        options: [
+            {
+                name: 'link_or_name',
+                description: 'the link or name of the song',
+                required: true,
+                type: DiscordJS.Constants.ApplicationCommandOptionTypes.STRING,
+            }
+        ]
+    })
 })
 
 client.on('messageCreate', async (message) => {
 	if (!message.guild) return;
 
-	if (message.content === '-') {
+	if (message.content.startsWith('-')) {
 		const channel = message.member?.voice.channel;
 
 		if (channel) {
@@ -135,60 +144,81 @@ client.on('messageCreate', async (message) => {
 			message.reply('Join a voice channel then try again!');
 		}
 	}
+
+    else if(message.content.startsWith('/play')) {
+        console.log("play message received") 
+        if (message.author.bot) { return }
+        const guild = client.guilds.cache.get(getGuildEnv())
+        console.log('interaction type:' + message.type)
+        message.reply({
+            content: 'playing'
+        })
+        const substrs = message.content.split(' ')
+        if (substrs.length < 1){
+            return
+        }//else
+        const playArg = substrs[1]
+        if (playArg == null) {
+            return
+        }
+        console.log(playArg)
+        const isValidLink:boolean = ytdl.validateURL(playArg)
+        if (isValidLink) {  //download it, then play to vc
+            //TODO check if link has already been downloaded before attempting download
+            const URL: string = playArg
+            ytdl.getInfo(URL).then(info => {
+                const fileName = getFileName(info)
+                downloadFromURL(URL, fileName)
+            })
+            try {
+                //const connection = await connectToChannel(vc)
+                //connection.subscribe(player);
+                console.log('Playing now!');
+            } catch (error) {
+                console.error(error);
+            }
+
+        } else if (true){            //check if the title is in the music dir, play it if found
+            //search musicDir for fileName, play closest match
+        }
+        else {  //arg 'playArg' is not a valid link or title
+            //play <link> <name>
+            //play <song_title>
+        }
+    }
 });
 
-// client.on('interactionCreate', async (interaction) => {
-//     if(!interaction.isCommand()) {
-//         //if (interaction.isMessageComponent())
-//         //do interesting things with the interaction
-//         return
-//     }
-//     const {commandName, options} = interaction
-//     if (commandName === 'ping') {
-//         interaction.reply ({
-//             content: 'pongers',
-//             ephemeral: true
-//         })
-//     }
-//     else if(commandName === 'play') { 
-//         const guild = client.guilds.cache.get(getGuildEnv())
-//         console.log('interaction type:' + interaction.type)
-//         interaction.reply({
-//             content: 'playing',
-//             ephemeral: false
-//         })
-//         if (options == null) {
-//             return
-//         }
-//         const playArg = options.getString('link_or_name')
-//         if (playArg == null) {
-//             return
-//         }
-//         const isValidLink:boolean = ytdl.validateURL(playArg)
-//         if (isValidLink) {  //download it, then play to vc
-//             //TODO check if link has already been downloaded before attempting download
-//             const URL: string = playArg
-//             ytdl.getInfo(URL).then(info => {
-//                 const fileName = getFileName(info)
-//                 downloadFromURL(URL, fileName)
-//             })
-//             try {
-//                 //const connection = await connectToChannel(vc)
-//                 //connection.subscribe(player);
-//                 interaction.reply('Playing now!');
-//             } catch (error) {
-//                 console.error(error);
-//             }
+client.on('interactionCreate', async (interaction) => {
+    if(interaction.isAutocomplete()) {
+        //auto complete the command
+        console.log('automcomplete play')
+        interaction.respond([
+            {
+                name: 'play a link or downloaded song',
+                value: 'play'
+            }
+        ]);
+    }
 
-//         } else if (true){            //check if the title is in the music dir, play it if found
-//             //search musicDir for fileName, play closest match
-//         }
-//         else {  //arg 'playArg' is not a valid link or title
-//             //play <link> <name>
-//             //play <song_title>
-//         }
-//     }
-// })
+    if(!interaction.isCommand()) {
+        //if (interaction.isMessageComponent())
+        //do interesting things with the interaction
+        return
+    }
+    const {commandName, options} = interaction
+    if (commandName === 'ping') {
+        interaction.reply ({
+            content: 'pongers',
+            ephemeral: true
+        })
+    }
+    else if (commandName === 'play') {
+        console.log("play command received") 
+
+        // if (interaction. ) {
+        // }
+    }
+})
 
 function getFileName(info: ytdl.videoInfo, fileExt: string = 'mp3', substring_len: number = title_length) {
     const title = info.videoDetails.title
