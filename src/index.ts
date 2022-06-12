@@ -84,43 +84,37 @@ client.on('ready', async () => {
 		console.error(error);
 	}
     console.log('ready!')
-
+/*
     // commands?.create({
     //     name: 'ping',
     //     description: 'ping'
     // })
-    const playCmd = new SlashCommandBuilder()
-        .setName('play')
-        .setDescription('play a song')
-        .addStringOption((option) => //async (message: Message)
-            option
-                .setName('arg1')
-                .setDescription('link to a song or name of a song')
-                .setRequired(true)
-                .setAutocomplete(true)
-    );
-    if (playCmd ) {
-        commands?.create(playCmd)
-    }
+    // const playCmd = new SlashCommandBuilder()
+    //     .setName('play')
+    //     .setDescription('play a song')
+    //     .addStringOption((option) => //async (message: Message)
+    //         option
+    //             .setName('arg1')
+    //             .setDescription('link to a song or name of a song')
+    //             .setRequired(true)
+    //             .setAutocomplete(true)
+    // );
+    // if (playCmd ) {
+    //     commands?.(playCmd)
+    // }*/
     
-    // commands?.create({
-    //     name: 'play',
-    //     description: 'plays a song via link or name',
-    //     options: [
-    //         {
-    //             name: 'link_or_name',
-    //             description: 'the link or name of the song',
-    //             required: true,
-    //             type: DiscordJS.Constants.ApplicationCommandOptionTypes.STRING,
-    //         },
-    //         {
-    //             name: 'user',
-    //             description: 'the user to play the song for',
-    //             required: false,
-    //             type: DiscordJS.Constants.ApplicationCommandOptionTypes.USER,
-    //         }
-    //     ]
-    // })
+    commands?.create({
+        name: 'play',
+        description: 'plays a song via link or name',
+        options: [
+            {
+                name: 'link_or_name',
+                description: 'the link or name of the song',
+                required: true,
+                type: DiscordJS.Constants.ApplicationCommandOptionTypes.STRING,
+            }
+        ]
+    })
 })
 
 client.on('messageCreate', async (message) => {
