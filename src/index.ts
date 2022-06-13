@@ -36,10 +36,10 @@ client.on('ready', async () => {
     const guild = client.guilds.cache.get(getGuildEnv())
     let commands
     if (guild) {
-        console.log('guild found')
+        //console.log('guild found')
         commands = guild.commands
     } else {
-        console.log('no guild found')
+        //console.log('no guild found')
         commands = client.application?.commands
     }
     console.log('ready!')
@@ -64,56 +64,6 @@ client.on('ready', async () => {
     })
 })
 
-// client.on('messageCreate', async (message) => {
-// 	if (!message.guild) return;
-
-// 	if (message.content.startsWith('-')) {
-// 		const channel = message.member?.voice.channel;
-// 	}
-
-//     else if(message.content.startsWith('/play')) {
-//         console.log("play message received") 
-//         if (message.author.bot) { return }
-//         const guild = client.guilds.cache.get(getGuildEnv())
-//         console.log('interaction type:' + message.type)
-//         message.reply({
-//             content: 'playing'
-//         })
-//         const substrs = message.content.split(' ')
-//         if (substrs.length < 1){
-//             return
-//         }//else
-//         const playArg = substrs[1]
-//         if (playArg == null) {
-//             return
-//         }
-//         console.log(playArg)
-//         const isValidLink:boolean = ytdl.validateURL(playArg)
-//         if (isValidLink) {  //download it, then play to vc
-//             //TODO check if link has already been downloaded before attempting download
-//             const URL: string = playArg
-//             ytdl.getInfo(URL).then(info => {
-//                 const fileName = getFileName(info)
-//                 downloadFromURL(URL, fileName)
-//             })
-//             try {
-//                 //const connection = await connectToChannel(vc)
-//                 //connection.subscribe(player);
-//                 console.log('Playing now!');
-//             } catch (error) {
-//                 console.error(error);
-//             }
-
-//         } else if (true){            //check if the title is in the music dir, play it if found
-//             //search musicDir for fileName, play closest match
-//         }
-//         else {  //arg 'playArg' is not a valid link or title
-//             //play <link> <name>
-//             //play <song_title>
-//         }
-//     }
-// });
-
 client.on('interactionCreate', async (interaction) => {
     if(!interaction.isCommand()) {
         return
@@ -126,54 +76,65 @@ client.on('interactionCreate', async (interaction) => {
         })
     }
     else if (commandName === 'play') {
-        console.log("play command received") 
+        //console.log("play command received") 
         if (interaction.member) {
-            console.log("member present")
+            //console.log("member present")
         }
-        //console.log("user: ", interaction.user)
         const userGuild = client.guilds.cache.get(getGuildEnv())
         const members = await userGuild?.members
-        if (members && userGuild?.memberCount) {
-            const vc = (await members.fetch(interaction.user.id)).voice.channel
-            if (vc) {
-                console.log('vc Found!')
-                await connectToChannel(vc)
+        if (!members || !userGuild?.memberCount) {
+            return
+        }
+        const vc = (await members.fetch(interaction.user.id)).voice.channel
+        if (!vc) {
+            return
+        }
+
+        const playArg = options.get('link_or_name')
+        //console.log(playArg)
+        if (playArg == null) {
+            return
+        }
+        if (!playArg.value || typeof(playArg.value) != 'string') {
+            return
+        }
+        const URL = playArg.value
+        //console.log(URL)
+        const isValidLink:boolean = ytdl.validateURL(URL)
+        //console.log("valid link: ", isValidLink)
+        if (isValidLink) {  //download it, then play to vc
+            //TODO check if link has already been downloaded before attempting download
+            let fileName
+            ytdl.getInfo(URL).then(async info => {
+                fileName = getFileName(info)
+                downloadFromURL(URL, fileName)
                 try {
-                    await playSong();
-                    console.log('Song is ready to play!');
+                    const connection = await connectToChannel(vc)
+                    if (!connection) {
+                        return
+                    }
+                    if (!fileName) {
+                        console.log("no file name")
+                        return
+                    }
+                    await playSong(fileName);
+                    //console.log('Song is ready to play!');
+                    //console.log('Playing now!');
                 } catch (error) {
                     console.error(error);
                 }
-            }
+            })
+
         }
-    
+        else {
+            //playing downloaded song by name
+        }
+        interaction.reply ({
+            content: 'playing',
+            ephemeral: false
+        })
     }
 })
-
-
-
-function getGuildEnv() {
-    const guild = process.env.GUILD_ID
-    if (guild == null) {
-        console.log('No guild environment variable found. Exiting.')
-        process.exit(1)
-    }
-    return guild
-}
-
-function playSong() {
-    try {
-        const resource = createAudioResource('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', {
-		    inputType: StreamType.Arbitrary,
-	    });
-        player.play(resource);
-    }
-    catch (error) {
-        console.error(error);
-    }
-
-	return entersState(player, AudioPlayerStatus.Playing, 5e3);
-}
 
 async function connectToChannel(channel: DiscordJS.VoiceBasedChannel) {
     if (!channel) {
@@ -199,10 +160,10 @@ async function connectToChannel(channel: DiscordJS.VoiceBasedChannel) {
             }
             let subscription = connection.subscribe(player);
             if (subscription) {
-                console.log('subscribed to player')
+                //console.log('subscribed to player')
             }
             else{
-                console.log('failed to subscribe to player')
+                //console.log('failed to subscribe to player')
             }
             return connection;
         } catch (error) {
@@ -215,10 +176,49 @@ async function connectToChannel(channel: DiscordJS.VoiceBasedChannel) {
     }
 }
 
+function getGuildEnv() {
+    const guild = process.env.GUILD_ID
+    if (guild == null) {
+        console.log('No guild environment variable found. Exiting.')
+        process.exit(1)
+    }
+    return guild
+}
+
+function playSong(fileName: string) {
+    try {
+        // const resource = createAudioResource('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', {
+		//     inputType: StreamType.Arbitrary,
+	    // });
+        // const resource = createAudioResource('C:\\Users\\mstie\\OneDrive\\Desktop\\js_bot\\music\\93FEETOFSM.mp3', {
+		//     inputType: StreamType.Arbitrary,
+	    // })
+        const songPath = './music/' + fileName
+        const resource = createAudioResource(songPath, {
+		    inputType: StreamType.Arbitrary,
+	    })
+        player.play(resource);
+    }
+    catch (error) {
+        console.error(error);
+    }
+
+	return entersState(player, AudioPlayerStatus.Playing, 5e3);
+}
+
 function getFileName(info: ytdl.videoInfo, fileExt: string = 'mp3', substring_len: number = title_length) {
     const title = info.videoDetails.title
+    const titleDelimed = title.split(' ')
+    let runningCount = 0
+    let i = 0
+    let fileName = ''
+    while((runningCount < substring_len) && (i < titleDelimed.length)) {
+        runningCount += titleDelimed[i].length
+        fileName += titleDelimed[i]
+        i++
+    }
     const titleSubstr = title.substring(0, substring_len)
-    const fileName = titleSubstr + '.' + fileExt
+    fileName += '.' + fileExt
     //strip ending whitespace
     return fileName
 }
