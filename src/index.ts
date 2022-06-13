@@ -32,29 +32,56 @@ function getGuildEnv() {
 }
 
 function playSong() {
-	const resource = createAudioResource('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', {
-		inputType: StreamType.Arbitrary,
-	});
-
-	player.play(resource);
+    try {
+        const resource = createAudioResource('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', {
+		    inputType: StreamType.Arbitrary,
+	    });
+        player.play(resource);
+    }
+    catch (error) {
+        console.error(error);
+    }
 
 	return entersState(player, AudioPlayerStatus.Playing, 5e3);
 }
 
-async function connectToChannel(channel: VoiceChannel) {
-	const connection = joinVoiceChannel({
-		channelId: channel.id,
-		guildId: channel.guild.id,
-		adapterCreator: createDiscordJSAdapter(channel),
-	});
+async function connectToChannel(channel: DiscordJS.VoiceBasedChannel) {
+    if (channel) {
+        console.log("channel found")
+        try {
+            const voice = await channel.fetch()
+            if (voice.type != 'GUILD_VOICE') {
+                return
+            }
+            const connection = joinVoiceChannel({
+                channelId: channel.id,
+                guildId: channel.guild.id, 
+                adapterCreator: createDiscordJSAdapter(voice),
+            });
+            try {
+                await entersState(connection, VoiceConnectionStatus.Ready, 30e3);
+                if (!connection) {
+                    return
+                }
+                let subscription = connection.subscribe(player);
+                if (subscription) {
+                    console.log('subscribed to player')
+                }
+                else{
+                    console.log('failed to subscribe to player')
+                }
+                return connection;
+            } catch (error) {
+                connection.destroy();
+                throw error;
+            }
 
-	try {
-		await entersState(connection, VoiceConnectionStatus.Ready, 30e3);
-		return connection;
-	} catch (error) {
-		connection.destroy();
-		throw error;
-	}
+        } catch (error) {
+            console.error(error);
+        }
+    } else {
+        console.log('Join a voice channel then try again!');
+    }
 }
 
 const client = new DiscordJS.Client({
@@ -77,34 +104,16 @@ client.on('ready', async () => {
         console.log('no guild found')
         commands = client.application?.commands
     }
-    try {
-		await playSong();
-		console.log('Song is ready to play!');
-	} catch (error) {
-		console.error(error);
-	}
     console.log('ready!')
-/*
-    // commands?.create({
-    //     name: 'ping',
-    //     description: 'ping'
-    // })
-    // const playCmd = new SlashCommandBuilder()
-    //     .setName('play')
-    //     .setDescription('play a song')
-    //     .addStringOption((option) => //async (message: Message)
-    //         option
-    //             .setName('arg1')
-    //             .setDescription('link to a song or name of a song')
-    //             .setRequired(true)
-    //             .setAutocomplete(true)
-    // );
-    // if (playCmd ) {
-    //     commands?.(playCmd)
-    // }*/
+
+    commands?.create({
+        name: 'ping',
+        description: 'ping'
+    })
     
     commands?.create({
         name: 'play',
+        type: 1,
         description: 'plays a song via link or name',
         options: [
             {
@@ -117,76 +126,55 @@ client.on('ready', async () => {
     })
 })
 
-client.on('messageCreate', async (message) => {
-	if (!message.guild) return;
+// client.on('messageCreate', async (message) => {
+// 	if (!message.guild) return;
 
-	if (message.content.startsWith('-')) {
-		const channel = message.member?.voice.channel;
+// 	if (message.content.startsWith('-')) {
+// 		const channel = message.member?.voice.channel;
+// 	}
 
-		if (channel) {
-			try {
-                const voice = await channel.fetch()
-                if (voice.type == 'GUILD_VOICE') {
-                    const connection = await connectToChannel(voice);
-                    let subscription = connection.subscribe(player);
-                    if (subscription) {
-                        console.log('subscribed to player')
-                    }
-                    else{
-                        console.log('failed to subscribe to player')
-                    }
-                }
+//     else if(message.content.startsWith('/play')) {
+//         console.log("play message received") 
+//         if (message.author.bot) { return }
+//         const guild = client.guilds.cache.get(getGuildEnv())
+//         console.log('interaction type:' + message.type)
+//         message.reply({
+//             content: 'playing'
+//         })
+//         const substrs = message.content.split(' ')
+//         if (substrs.length < 1){
+//             return
+//         }//else
+//         const playArg = substrs[1]
+//         if (playArg == null) {
+//             return
+//         }
+//         console.log(playArg)
+//         const isValidLink:boolean = ytdl.validateURL(playArg)
+//         if (isValidLink) {  //download it, then play to vc
+//             //TODO check if link has already been downloaded before attempting download
+//             const URL: string = playArg
+//             ytdl.getInfo(URL).then(info => {
+//                 const fileName = getFileName(info)
+//                 downloadFromURL(URL, fileName)
+//             })
+//             try {
+//                 //const connection = await connectToChannel(vc)
+//                 //connection.subscribe(player);
+//                 console.log('Playing now!');
+//             } catch (error) {
+//                 console.error(error);
+//             }
 
-			} catch (error) {
-				console.error(error);
-			}
-		} else {
-			message.reply('Join a voice channel then try again!');
-		}
-	}
-
-    else if(message.content.startsWith('/play')) {
-        console.log("play message received") 
-        if (message.author.bot) { return }
-        const guild = client.guilds.cache.get(getGuildEnv())
-        console.log('interaction type:' + message.type)
-        message.reply({
-            content: 'playing'
-        })
-        const substrs = message.content.split(' ')
-        if (substrs.length < 1){
-            return
-        }//else
-        const playArg = substrs[1]
-        if (playArg == null) {
-            return
-        }
-        console.log(playArg)
-        const isValidLink:boolean = ytdl.validateURL(playArg)
-        if (isValidLink) {  //download it, then play to vc
-            //TODO check if link has already been downloaded before attempting download
-            const URL: string = playArg
-            ytdl.getInfo(URL).then(info => {
-                const fileName = getFileName(info)
-                downloadFromURL(URL, fileName)
-            })
-            try {
-                //const connection = await connectToChannel(vc)
-                //connection.subscribe(player);
-                console.log('Playing now!');
-            } catch (error) {
-                console.error(error);
-            }
-
-        } else if (true){            //check if the title is in the music dir, play it if found
-            //search musicDir for fileName, play closest match
-        }
-        else {  //arg 'playArg' is not a valid link or title
-            //play <link> <name>
-            //play <song_title>
-        }
-    }
-});
+//         } else if (true){            //check if the title is in the music dir, play it if found
+//             //search musicDir for fileName, play closest match
+//         }
+//         else {  //arg 'playArg' is not a valid link or title
+//             //play <link> <name>
+//             //play <song_title>
+//         }
+//     }
+// });
 
 client.on('interactionCreate', async (interaction) => {
     if(interaction.isAutocomplete()) {
@@ -209,14 +197,31 @@ client.on('interactionCreate', async (interaction) => {
     if (commandName === 'ping') {
         interaction.reply ({
             content: 'pongers',
-            ephemeral: true
+            ephemeral: false
         })
     }
     else if (commandName === 'play') {
         console.log("play command received") 
-
-        // if (interaction. ) {
-        // }
+        if (interaction.member != null) {
+            console.log("member present")
+        }
+        //console.log("user: ", interaction.user)
+        const userGuild = client.guilds.cache.get(getGuildEnv())
+        const members = await userGuild?.members
+        if (members && userGuild?.memberCount) {
+            const vc = (await members.fetch(interaction.user.id)).voice.channel
+            if (vc) {
+                console.log('vc Found!')
+                await connectToChannel(vc)
+                try {
+                    await playSong();
+                    console.log('Song is ready to play!');
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+        }
+    
     }
 })
 
