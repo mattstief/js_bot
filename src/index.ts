@@ -7,12 +7,15 @@ import {
 	StreamType,
 	AudioPlayerStatus,
 	VoiceConnectionStatus,
+    getVoiceConnection,
 } from '@discordjs/voice'
 import { SlashCommandBuilder } from '@discordjs/builders';
 import dotenv from 'dotenv'
 import ytdl from 'ytdl-core'
 import { createDiscordJSAdapter } from './adapter'
 import * as fs from 'fs'
+
+var ffmetadata = require("ffmetadata");
 
 const title_length  : number = 10
 const ytdl_options  : ytdl.downloadOptions = {filter: 'audioonly'}
@@ -47,6 +50,16 @@ client.on('ready', async () => {
     commands?.create({
         name: 'ping',
         description: 'ping'
+    })
+
+    commands?.create({
+        name: 'purge',
+        description: 'deletes all downloaded songs'
+    })
+
+    commands?.create({
+        name: 'disconnect',
+        description: 'disconnects from voice chat'
     })
     
     commands?.create({
@@ -134,6 +147,26 @@ client.on('interactionCreate', async (interaction) => {
             ephemeral: false
         })
     }
+    else if(commandName === 'purge') {
+        const files = fs.readdirSync(musicDir)
+        for (const file of files) {
+            fs.unlinkSync(musicDir + file)
+        }
+        interaction.reply ({
+            content: 'purged',
+            ephemeral: false
+        })
+    }
+
+    else if(commandName == 'disconnect') {
+        const voiceConnection = getVoiceConnection(getGuildEnv())
+        getVoiceConnection(getGuildEnv())?.disconnect()
+        interaction.reply ({
+            content: 'disconnected',
+            ephemeral: false
+        })
+    }
+    
 })
 
 async function connectToChannel(channel: DiscordJS.VoiceBasedChannel) {
@@ -141,7 +174,6 @@ async function connectToChannel(channel: DiscordJS.VoiceBasedChannel) {
         console.log('Join a voice channel then try again!')
         return
     }
-    
     console.log("channel found")
     try {
         const voice = await channel.fetch()
@@ -158,13 +190,7 @@ async function connectToChannel(channel: DiscordJS.VoiceBasedChannel) {
             if (!connection) {
                 return
             }
-            let subscription = connection.subscribe(player);
-            if (subscription) {
-                //console.log('subscribed to player')
-            }
-            else{
-                //console.log('failed to subscribe to player')
-            }
+            let subscription = connection.subscribe(player)    //subscribe to the player
             return connection;
         } catch (error) {
             connection.destroy();
@@ -173,7 +199,9 @@ async function connectToChannel(channel: DiscordJS.VoiceBasedChannel) {
 
     } catch (error) {
         console.error(error);
+        return null
     }
+    return null
 }
 
 function getGuildEnv() {
@@ -187,12 +215,6 @@ function getGuildEnv() {
 
 function playSong(fileName: string) {
     try {
-        // const resource = createAudioResource('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', {
-		//     inputType: StreamType.Arbitrary,
-	    // });
-        // const resource = createAudioResource('C:\\Users\\mstie\\OneDrive\\Desktop\\js_bot\\music\\93FEETOFSM.mp3', {
-		//     inputType: StreamType.Arbitrary,
-	    // })
         const songPath = './music/' + fileName
         const resource = createAudioResource(songPath, {
 		    inputType: StreamType.Arbitrary,
@@ -202,7 +224,6 @@ function playSong(fileName: string) {
     catch (error) {
         console.error(error);
     }
-
 	return entersState(player, AudioPlayerStatus.Playing, 5e3);
 }
 
@@ -224,10 +245,33 @@ function getFileName(info: ytdl.videoInfo, fileExt: string = 'mp3', substring_le
 }
 
 function downloadFromURL(url: string, fileName: string) {
-    const a = ytdl (url, ytdl_options).pipe(fs.createWriteStream(musicDir + fileName))
+    const a = ytdl(url, ytdl_options).pipe(fs.createWriteStream(musicDir + fileName))
     a.on('finish', () => { 
         console.log('download \"' + fileName + '\" finished') 
+        setMetaData(musicDir+fileName, url)
         return
+    })
+
+}
+
+function setMetaData(songPath:string, URL:string) {
+    const currData = ffmetadata.read(songPath)
+    ytdl.getInfo(URL).then(async info => {
+        const data = currData + 
+        {
+            artist: info.videoDetails.author,
+            title: info.videoDetails.title,
+            year: info.videoDetails.publishDate.substring(0, 4),
+            genre: info.videoDetails.category,
+            duration: info.videoDetails.lengthSeconds,
+            url: URL,
+        }
+        ffmetadata.write(songPath, data, function(err: any) {
+            if(err) {
+                console.error(err);
+            }
+            console.log('metadata written');
+        })
     })
 }
 
