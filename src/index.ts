@@ -22,68 +22,6 @@ dotenv.config()
 
 const player = createAudioPlayer();
 
-function getGuildEnv() {
-    const guild = process.env.GUILD_ID
-    if (guild == null) {
-        console.log('No guild environment variable found. Exiting.')
-        process.exit(1)
-    }
-    return guild
-}
-
-function playSong() {
-    try {
-        const resource = createAudioResource('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', {
-		    inputType: StreamType.Arbitrary,
-	    });
-        player.play(resource);
-    }
-    catch (error) {
-        console.error(error);
-    }
-
-	return entersState(player, AudioPlayerStatus.Playing, 5e3);
-}
-
-async function connectToChannel(channel: DiscordJS.VoiceBasedChannel) {
-    if (channel) {
-        console.log("channel found")
-        try {
-            const voice = await channel.fetch()
-            if (voice.type != 'GUILD_VOICE') {
-                return
-            }
-            const connection = joinVoiceChannel({
-                channelId: channel.id,
-                guildId: channel.guild.id, 
-                adapterCreator: createDiscordJSAdapter(voice),
-            });
-            try {
-                await entersState(connection, VoiceConnectionStatus.Ready, 30e3);
-                if (!connection) {
-                    return
-                }
-                let subscription = connection.subscribe(player);
-                if (subscription) {
-                    console.log('subscribed to player')
-                }
-                else{
-                    console.log('failed to subscribe to player')
-                }
-                return connection;
-            } catch (error) {
-                connection.destroy();
-                throw error;
-            }
-
-        } catch (error) {
-            console.error(error);
-        }
-    } else {
-        console.log('Join a voice channel then try again!');
-    }
-}
-
 const client = new DiscordJS.Client({
     intents: [
         Intents.FLAGS.GUILDS,
@@ -177,20 +115,7 @@ client.on('ready', async () => {
 // });
 
 client.on('interactionCreate', async (interaction) => {
-    if(interaction.isAutocomplete()) {
-        //auto complete the command
-        console.log('automcomplete play')
-        interaction.respond([
-            {
-                name: 'play a link or downloaded song',
-                value: 'play'
-            }
-        ]);
-    }
-
     if(!interaction.isCommand()) {
-        //if (interaction.isMessageComponent())
-        //do interesting things with the interaction
         return
     }
     const {commandName, options} = interaction
@@ -202,7 +127,7 @@ client.on('interactionCreate', async (interaction) => {
     }
     else if (commandName === 'play') {
         console.log("play command received") 
-        if (interaction.member != null) {
+        if (interaction.member) {
             console.log("member present")
         }
         //console.log("user: ", interaction.user)
@@ -224,6 +149,71 @@ client.on('interactionCreate', async (interaction) => {
     
     }
 })
+
+
+
+function getGuildEnv() {
+    const guild = process.env.GUILD_ID
+    if (guild == null) {
+        console.log('No guild environment variable found. Exiting.')
+        process.exit(1)
+    }
+    return guild
+}
+
+function playSong() {
+    try {
+        const resource = createAudioResource('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', {
+		    inputType: StreamType.Arbitrary,
+	    });
+        player.play(resource);
+    }
+    catch (error) {
+        console.error(error);
+    }
+
+	return entersState(player, AudioPlayerStatus.Playing, 5e3);
+}
+
+async function connectToChannel(channel: DiscordJS.VoiceBasedChannel) {
+    if (!channel) {
+        console.log('Join a voice channel then try again!')
+        return
+    }
+    
+    console.log("channel found")
+    try {
+        const voice = await channel.fetch()
+        if (voice.type != 'GUILD_VOICE') {
+            return
+        }
+        const connection = joinVoiceChannel({
+            channelId: channel.id,
+            guildId: channel.guild.id, 
+            adapterCreator: createDiscordJSAdapter(voice),
+        });
+        try {
+            await entersState(connection, VoiceConnectionStatus.Ready, 30e3);
+            if (!connection) {
+                return
+            }
+            let subscription = connection.subscribe(player);
+            if (subscription) {
+                console.log('subscribed to player')
+            }
+            else{
+                console.log('failed to subscribe to player')
+            }
+            return connection;
+        } catch (error) {
+            connection.destroy();
+            throw error;
+        }
+
+    } catch (error) {
+        console.error(error);
+    }
+}
 
 function getFileName(info: ytdl.videoInfo, fileExt: string = 'mp3', substring_len: number = title_length) {
     const title = info.videoDetails.title
