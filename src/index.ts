@@ -9,21 +9,31 @@ import {
 	VoiceConnectionStatus,
     getVoiceConnection,
 } from '@discordjs/voice'
-import { SlashCommandBuilder } from '@discordjs/builders';
 import dotenv from 'dotenv'
 import ytdl from 'ytdl-core'
 import { createDiscordJSAdapter } from './adapter'
 import * as fs from 'fs'
 
-var ffmetadata = require("ffmetadata");
-
 const title_length  : number = 10
 const ytdl_options  : ytdl.downloadOptions = {filter: 'audioonly'}
 const musicDir      : string = 'music/'
 
+let songQueue: Array<string> = []
+
 dotenv.config()
 
 const player = createAudioPlayer();
+player.addListener('stateChange', () => {
+    //if state.status == idle, pop queue, play next song
+    if (player.state.status == AudioPlayerStatus.Idle) {
+        songQueue.shift()
+        console.log("SHIFTING!")
+        if (songQueue.length > 0) {
+            playSong(songQueue[0])
+        }
+    }
+    //else do nothing
+})
 
 const client = new DiscordJS.Client({
     intents: [
@@ -121,6 +131,7 @@ client.on('interactionCreate', async (interaction) => {
             ytdl.getInfo(URL).then(async info => {
                 fileName = getFileName(info)
                 downloadFromURL(URL, fileName)
+                appendSongQueue(fileName)
                 try {
                     const connection = await connectToChannel(vc)
                     if (!connection) {
@@ -130,7 +141,10 @@ client.on('interactionCreate', async (interaction) => {
                         console.log("no file name")
                         return
                     }
-                    await playSong(fileName);
+                    if (songQueue.length == 1) {
+                        //console.log("only one song in queue")
+                        await playSong(fileName);
+                    }
                     //console.log('Song is ready to play!');
                     //console.log('Playing now!');
                 } catch (error) {
@@ -201,7 +215,6 @@ async function connectToChannel(channel: DiscordJS.VoiceBasedChannel) {
         console.error(error);
         return null
     }
-    return null
 }
 
 function getGuildEnv() {
@@ -214,6 +227,7 @@ function getGuildEnv() {
 }
 
 function playSong(fileName: string) {
+    console.log("playing song" + fileName)
     try {
         const songPath = './music/' + fileName
         const resource = createAudioResource(songPath, {
@@ -240,7 +254,6 @@ function getFileName(info: ytdl.videoInfo, fileExt: string = 'mp3', substring_le
     }
     const titleSubstr = title.substring(0, substring_len)
     fileName += '.' + fileExt
-    //strip ending whitespace
     return fileName
 }
 
@@ -248,30 +261,8 @@ function downloadFromURL(url: string, fileName: string) {
     const a = ytdl(url, ytdl_options).pipe(fs.createWriteStream(musicDir + fileName))
     a.on('finish', () => { 
         console.log('download \"' + fileName + '\" finished') 
-        setMetaData(musicDir+fileName, url)
+        //setMetaData(musicDir+fileName, url)
         return
-    })
-
-}
-
-function setMetaData(songPath:string, URL:string) {
-    const currData = ffmetadata.read(songPath)
-    ytdl.getInfo(URL).then(async info => {
-        const data = currData + 
-        {
-            artist: info.videoDetails.author,
-            title: info.videoDetails.title,
-            year: info.videoDetails.publishDate.substring(0, 4),
-            genre: info.videoDetails.category,
-            duration: info.videoDetails.lengthSeconds,
-            url: URL,
-        }
-        ffmetadata.write(songPath, data, function(err: any) {
-            if(err) {
-                console.error(err);
-            }
-            console.log('metadata written');
-        })
     })
 }
 
@@ -285,6 +276,19 @@ function makeMusicDirectory() {
             console.log('path \"' + musicDir + '\" not found. Created new directory.')
         }
     })
+}
+
+function appendSongQueue(fileName: string) {
+    const fileExits:boolean = fs.existsSync(musicDir + fileName)
+    if (fileExits) {
+        songQueue.push(fileName)
+    }
+    else {
+
+    }
+
+    console.log("song queue: " + songQueue)
+
 }
 
 let x:Promise<string> = client.login(process.env.TOKEN)
