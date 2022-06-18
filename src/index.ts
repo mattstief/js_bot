@@ -26,11 +26,7 @@ const player = createAudioPlayer();
 player.addListener('stateChange', () => {
     //if state.status == idle, pop queue, play next song
     if (player.state.status == AudioPlayerStatus.Idle) {
-        songQueue.shift()
-        console.log("SHIFTING!")
-        if (songQueue.length > 0) {
-            playSong(songQueue[0])
-        }
+        skipSong()
     }
     //else do nothing
 })
@@ -70,6 +66,12 @@ client.on('ready', async () => {
     commands?.create({
         name: 'disconnect',
         description: 'disconnects from voice chat'
+    })
+
+    commands?.create({
+        name: 'skip',
+        description: 'skips current song',
+        
     })
     
     commands?.create({
@@ -161,6 +163,10 @@ client.on('interactionCreate', async (interaction) => {
             ephemeral: false
         })
     }
+    else if(commandName == 'skip') {
+        skipSong()
+    }
+
     else if(commandName === 'purge') {
         const files = fs.readdirSync(musicDir)
         for (const file of files) {
@@ -214,6 +220,14 @@ async function connectToChannel(channel: DiscordJS.VoiceBasedChannel) {
     } catch (error) {
         console.error(error);
         return null
+    }
+}
+
+function skipSong() {
+    songQueue.shift()
+    console.log("SHIFTING!")
+    if (songQueue.length > 0) {
+        playSong(songQueue[0])
     }
 }
 
