@@ -129,10 +129,9 @@ client.on('interactionCreate', async (interaction) => {
         //console.log("valid link: ", isValidLink)
         if (isValidLink) {  //download it, then play to vc
             //TODO check if link has already been downloaded before attempting download
-            let fileName
             ytdl.getInfo(URL).then(async info => {
-                fileName = getFileName(info)
-                downloadFromURL(URL, fileName)
+                let fileName = getFileName(info)
+                await downloadFromURL(URL, fileName)
                 appendSongQueue(fileName)
                 try {
                     const connection = await connectToChannel(vc)
@@ -144,11 +143,9 @@ client.on('interactionCreate', async (interaction) => {
                         return
                     }
                     if (songQueue.length == 1) {
-                        //console.log("only one song in queue")
+                        console.log("only one song in queue")
                         await playSong(fileName);
                     }
-                    //console.log('Song is ready to play!');
-                    //console.log('Playing now!');
                 } catch (error) {
                     console.error(error);
                 }
@@ -163,8 +160,20 @@ client.on('interactionCreate', async (interaction) => {
             ephemeral: false
         })
     }
+
     else if(commandName == 'skip') {
-        skipSong()
+        let songName = skipSong()
+        let reply = ''
+        if (songName) {
+            reply = 'skipped ' + songName
+        }
+        else {
+            reply = 'no songs in queue'
+        }
+        interaction.reply ({
+            content: reply,
+            ephemeral: false
+        })
     }
 
     else if(commandName === 'purge') {
@@ -224,11 +233,12 @@ async function connectToChannel(channel: DiscordJS.VoiceBasedChannel) {
 }
 
 function skipSong() {
-    songQueue.shift()
+    let currentSong = songQueue.shift()
     console.log("SHIFTING!")
     if (songQueue.length > 0) {
         playSong(songQueue[0])
     }
+    return currentSong
 }
 
 function getGuildEnv() {
@@ -271,13 +281,13 @@ function getFileName(info: ytdl.videoInfo, fileExt: string = 'mp3', substring_le
     return fileName
 }
 
-function downloadFromURL(url: string, fileName: string) {
+async function downloadFromURL(url: string, fileName: string) {
     const a = ytdl(url, ytdl_options).pipe(fs.createWriteStream(musicDir + fileName))
     a.on('finish', () => { 
         console.log('download \"' + fileName + '\" finished') 
-        //setMetaData(musicDir+fileName, url)
         return
     })
+
 }
 
 function makeMusicDirectory() {
@@ -293,16 +303,14 @@ function makeMusicDirectory() {
 }
 
 function appendSongQueue(fileName: string) {
+    console.log("filename: " + fileName)
     const fileExits:boolean = fs.existsSync(musicDir + fileName)
-    if (fileExits) {
-        songQueue.push(fileName)
-    }
-    else {
-
-    }
-
+    songQueue.push(fileName)
     console.log("song queue: " + songQueue)
+}
 
+function sleep(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 let x:Promise<string> = client.login(process.env.TOKEN)
