@@ -1,5 +1,5 @@
 import ytdl from 'ytdl-core'
-import DiscordJS, { Client, VoiceChannel, Intents, Message } from 'discord.js';
+import DiscordJS from 'discord.js';
 import {
 	joinVoiceChannel,
 	createAudioPlayer,
@@ -10,7 +10,6 @@ import {
 	VoiceConnectionStatus,
     getVoiceConnection,
 } from '@discordjs/voice'
-import dotenv from 'dotenv'
 import { createDiscordJSAdapter } from './adapter'
 import * as fs from 'fs'
 import {

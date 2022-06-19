@@ -1,5 +1,16 @@
 import ytdl from 'ytdl-core'
 import DiscordJS, { Client, VoiceChannel, Intents, Message, BaseCommandInteraction, CacheType } from 'discord.js';
+import * as fs from 'fs'
+import {
+	joinVoiceChannel,
+	createAudioPlayer,
+	createAudioResource,
+	entersState,
+	StreamType,
+	AudioPlayerStatus,
+	VoiceConnectionStatus,
+    getVoiceConnection,
+} from '@discordjs/voice'
 import {
     connectToChannel,
     downloadFromURL,
@@ -11,19 +22,6 @@ import {
 	getFileName,
     sleep
 } from './functions'
-import {
-	joinVoiceChannel,
-	createAudioPlayer,
-	createAudioResource,
-	entersState,
-	StreamType,
-	AudioPlayerStatus,
-	VoiceConnectionStatus,
-    getVoiceConnection,
-} from '@discordjs/voice'
-import dotenv from 'dotenv'
-import { createDiscordJSAdapter } from './adapter'
-import * as fs from 'fs'
 import {
     songQueue,
     title_length,

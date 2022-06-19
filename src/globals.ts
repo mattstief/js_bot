@@ -1,19 +1,8 @@
 import ytdl from 'ytdl-core'
-import DiscordJS, { Client, VoiceChannel, Intents, Message } from 'discord.js';
-import * as functions from './functions';
-import {
-	joinVoiceChannel,
-	createAudioPlayer,
-	createAudioResource,
-	entersState,
-	StreamType,
-	AudioPlayerStatus,
-	VoiceConnectionStatus,
-    getVoiceConnection,
-} from '@discordjs/voice'
+import DiscordJS, {Intents} from 'discord.js'
+import {createAudioPlayer} from '@discordjs/voice'
 import dotenv from 'dotenv'
-import { createDiscordJSAdapter } from './adapter'
-import * as fs from 'fs'
+dotenv.config()
 
 let songQueue: Array<string> = []
 
