@@ -1,4 +1,5 @@
-import DiscordJS from 'discord.js';
+import DiscordJS from 'discord.js'
+import {addExitCallback} from 'catch-exit'
 import {
 	joinVoiceChannel,
 	createAudioPlayer,
@@ -10,6 +11,7 @@ import {
     getVoiceConnection,
 } from '@discordjs/voice'
 import {
+    exitCallback,
     connectToChannel,
     downloadFromURL,
     skipSong,
@@ -38,11 +40,40 @@ import {
     resume
 } from './commands'
 
-async function stateEvent() {
-    if (player.state.status == AudioPlayerStatus.Idle) {
-        skipSong()
+addExitCallback((signal) => {
+    console.log(`Exiting with signal ${signal}`)
+    if (player.state.status == AudioPlayerStatus.Playing) {
+        player.stop()
     }
-    //else do nothing
+    // if (client.voice)
+    //if connected to a voice channel, disconnect
+    // if (VoiceConnectionStatus == VoiceConnectionStatus.Connected) {
+    //     getVoiceConnection. disconnect()
+    // }
+})
+
+async function stateEvent() {
+    switch(player.state.status) {
+        case AudioPlayerStatus.Playing:
+            console.log("playing")
+            break;
+        case AudioPlayerStatus.Paused:
+            console.log("paused")
+            break;
+        case AudioPlayerStatus.AutoPaused:
+            console.log("autopaused")
+            break;
+        case AudioPlayerStatus.Buffering:
+            console.log("buffering")
+            break;
+        case AudioPlayerStatus.Idle:
+            console.log("idle")
+            if (songQueue.length > 0) {
+                skipSong()
+            }
+            break;
+        //case AudioPlayerStatus.Error || AudioPlayerStatus.Disconnected:
+    }
 }
 
 async function readyEvent() {
@@ -123,6 +154,7 @@ async function interactionEvent(interaction:DiscordJS.Interaction<DiscordJS.Cach
                 break
             case 'disconnect':
                 disconnect(interaction)
+                break
             case 'skip':
                 skip(interaction)
                 break

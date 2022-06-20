@@ -12,6 +12,7 @@ import {
     getVoiceConnection,
 } from '@discordjs/voice'
 import {
+    exitCallback,
     connectToChannel,
     downloadFromURL,
     skipSong,
@@ -32,16 +33,22 @@ import {
 } from './globals'
 
 
-function disconnect (interaction:BaseCommandInteraction<CacheType>) {
-    // await interaction.reply ({
-    //     content: 'disconnected',
-    //     ephemeral: false
-    // })
+function disconnect (interaction:BaseCommandInteraction<CacheType> | null = null) {
+    player.stop()
     const voiceConnection = getVoiceConnection(getGuildEnv())
     getVoiceConnection(getGuildEnv())?.disconnect()
+    if (interaction) {
+        interaction.reply ({
+            content: 'disconnected',
+            ephemeral: false
+        })
+    }
 }
 
 function purge (interaction:BaseCommandInteraction<CacheType>) {
+    //TODO check if song is player - if so, either:
+    //1) stop it to free the resource
+    //2) skip deletion of that song
     const files = fs.readdirSync(musicDir)
     for (const file of files) {
         fs.unlinkSync(musicDir + file)
@@ -99,10 +106,6 @@ async function play (interaction:BaseCommandInteraction<CacheType>,
     if (!members || !userGuild?.memberCount) {
         return
     }
-    const vc = (await members.fetch(interaction.user.id)).voice.channel
-    if (!vc) {
-        return
-    }
 
     const playArg = options.get('link_or_name')
     //console.log(playArg)
@@ -121,8 +124,15 @@ async function play (interaction:BaseCommandInteraction<CacheType>,
         ytdl.getInfo(URL).then(async info => {
             let fileName = getFileName(info)
             await downloadFromURL(URL, fileName)
-            appendSongQueue(fileName)
             try {
+                const vc = (await members.fetch(interaction.user.id)).voice.channel
+                if (!vc) {
+                    interaction.reply ({
+                        content: 'not in a voice channel',
+                        ephemeral: false
+                    })
+                    return
+                }
                 const connection = await connectToChannel(vc)
                 if (!connection) {
                     return
@@ -131,6 +141,7 @@ async function play (interaction:BaseCommandInteraction<CacheType>,
                     console.log("no file name")
                     return
                 }
+                appendSongQueue(fileName)
                 if (songQueue.length == 1) {
                     console.log("only one song in queue")
                     await playSong(fileName);

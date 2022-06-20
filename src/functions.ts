@@ -20,7 +20,15 @@ import {
     player,
     client
 } from './globals'
+import { disconnect } from './commands';
 
+async function exitCallback() {
+    //const voiceConnection = getVoiceConnection(getGuildEnv())
+    disconnect()
+    console.log("exiting")
+    await client.destroy()
+    process.exit(0)
+}
 
 async function connectToChannel(channel: DiscordJS.VoiceBasedChannel) {
     if (!channel) {
@@ -97,7 +105,7 @@ function playSong(fileName: string) {
 	return entersState(player, AudioPlayerStatus.Playing, 5e3);
 }
 
-function getFileName(info: ytdl.videoInfo, fileExt: string = 'mp3', substring_len: number = title_length) {
+function getFileName(info: ytdl.videoInfo, fileExt: string = 'm4a', substring_len: number = title_length) {
     const title = info.videoDetails.title
     const titleDelimed = title.split(' ')
     let runningCount = 0
@@ -138,6 +146,7 @@ function sleep(ms: number) {
 
 //export all functions
 export {
+    exitCallback,
     connectToChannel,
     downloadFromURL,
     skipSong,
