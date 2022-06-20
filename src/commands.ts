@@ -33,12 +33,12 @@ import {
 
 
 function disconnect (interaction:BaseCommandInteraction<CacheType>) {
+    // await interaction.reply ({
+    //     content: 'disconnected',
+    //     ephemeral: false
+    // })
     const voiceConnection = getVoiceConnection(getGuildEnv())
     getVoiceConnection(getGuildEnv())?.disconnect()
-    interaction.reply ({
-        content: 'disconnected',
-        ephemeral: false
-    })
 }
 
 function purge (interaction:BaseCommandInteraction<CacheType>) {
@@ -63,6 +63,26 @@ function skip(interaction:BaseCommandInteraction<CacheType>) {
     }
     interaction.reply ({
         content: reply,
+        ephemeral: false
+    })
+}
+
+function pause(interaction:BaseCommandInteraction<CacheType>) {
+    console.log('pausing')
+    player.pause()
+    //TODO check if playing
+    interaction.reply ({
+        content: 'paused',
+        ephemeral: false
+    })
+}
+
+function resume(interaction:BaseCommandInteraction<CacheType>) {
+    if(player.playable) {
+        player.unpause()
+    }
+    interaction.reply ({
+        content: 'resumed',
         ephemeral: false
     })
 }
@@ -142,5 +162,7 @@ export {
 	purge,
 	skip, 
 	play,
-    ping
+    ping,
+    pause,
+    resume
 }

@@ -8,10 +8,10 @@ import {
     interactionEvent
 } from './events'
 
-player.addListener('stateChange', async () => stateEvent())
+player.addListener('stateChange', () => stateEvent())
 
-client.on('ready', async () => readyEvent())
+client.on('ready', () => readyEvent())
 
-client.on('interactionCreate', async (interaction) => interactionEvent(interaction))
+client.on('interactionCreate', (interaction) => interactionEvent(interaction))
 
 let x:Promise<string> = client.login(process.env.TOKEN)
