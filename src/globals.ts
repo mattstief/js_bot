@@ -2,6 +2,7 @@ import ytdl from 'ytdl-core'
 import DiscordJS, {Intents} from 'discord.js'
 import {createAudioPlayer} from '@discordjs/voice'
 import dotenv from 'dotenv'
+
 dotenv.config()
 
 let songQueue: Array<string> = []

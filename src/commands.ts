@@ -143,6 +143,4 @@ export {
 	skip, 
 	play,
     ping
-	
-
 }

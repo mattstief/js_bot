@@ -8,7 +8,7 @@ import {
     interactionEvent
 } from './events'
 
-player.addListener('stateChange', () => stateEvent())
+player.addListener('stateChange', async () => stateEvent())
 
 client.on('ready', async () => readyEvent())
 
