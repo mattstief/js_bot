@@ -9,6 +9,7 @@ import {
 	AudioPlayerStatus,
 	VoiceConnectionStatus,
     getVoiceConnection,
+    AudioPlayer,
 } from '@discordjs/voice'
 import { createDiscordJSAdapter } from './adapter'
 import * as fs from 'fs'

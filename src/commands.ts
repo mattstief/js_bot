@@ -170,6 +170,21 @@ function ping(interaction:BaseCommandInteraction<CacheType>) {
     })
 }
 
+function seek(interaction:BaseCommandInteraction<CacheType>, time:number) {
+    /*TODO implement seek
+    ffmpeg could enable this, see here https://trac.ffmpeg.org/wiki/Seeking
+    but it feels a bit janky since the AudioPlayer utilizes ffmpeg to play the song, 
+    not sure if using this will be compatible with the AudioPlayer.
+    
+    We could also split up chunks of the song into chapters(if available from yt video) 
+    during download, then save the chapters as separate resources, and seek to the chapter.
+    */
+    interaction.reply ({
+        content: 'seeked',
+        ephemeral: false
+    })
+}
+
 export {
     disconnect,
 	purge,
@@ -177,5 +192,6 @@ export {
 	play,
     ping,
     pause,
-    resume
+    resume,
+    seek
 }
