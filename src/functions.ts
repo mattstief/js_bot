@@ -72,6 +72,14 @@ async function downloadFromURL(url: string, fileName: string) {
     })
 }
 
+function printVideoChapters(info: ytdl.videoInfo) {
+    const chapters = info.videoDetails.chapters
+    console.log("video has " + chapters.length + " chapters")
+    for(const chapter of chapters) {
+        console.log(chapter.title + chapter.start_time)
+    }
+}
+
 function skipSong() {
     let currentSong = songQueue.shift()
     console.log("SHIFTING!")
@@ -149,6 +157,7 @@ export {
     exitCallback,
     connectToChannel,
     downloadFromURL,
+    printVideoChapters,
     skipSong,
     getGuildEnv,
     playSong,

@@ -15,6 +15,7 @@ import {
     exitCallback,
     connectToChannel,
     downloadFromURL,
+    printVideoChapters,
     skipSong,
     getGuildEnv,
     playSong,
@@ -122,6 +123,7 @@ async function play (interaction:BaseCommandInteraction<CacheType>,
     if (isValidLink) {  //download it, then play to vc
         //TODO check if link has already been downloaded before attempting download
         ytdl.getInfo(URL).then(async info => {
+            printVideoChapters(info)
             let fileName = getFileName(info)
             await downloadFromURL(URL, fileName)
             try {
