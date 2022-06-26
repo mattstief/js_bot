@@ -20,7 +20,8 @@ import {
     makeMusicDirectory,
     appendSongQueue,
 	getFileName,
-    sleep
+    sleep,
+    createSilentAudioFile
 } from './functions'
 import {
     songQueue,
@@ -37,7 +38,9 @@ import {
 	play,
     ping,
     pause,
-    resume
+    resume,
+    seek,
+    test
 } from './commands'
 
 addExitCallback((signal) => {
@@ -122,6 +125,30 @@ async function readyEvent() {
         })
 
         commands?.create({
+            name: 'seek',
+            description: 'seeks to a specific time in the song',
+        })
+
+        commands?.create({
+            name: 'test',
+            description: 'debug',
+            options: [
+                {
+                    name: 'number',
+                    description: 'arbitraty number',
+                    required: true,
+                    type: DiscordJS.Constants.ApplicationCommandOptionTypes.NUMBER
+                },
+                {
+                    name: 'string',
+                    description: 'arbitraty string',
+                    required: true,
+                    type: DiscordJS.Constants.ApplicationCommandOptionTypes.STRING
+                }
+            ]
+        })
+
+        commands?.create({
             name: 'play',
             type: 1,
             description: 'plays a song via link or name',
@@ -166,6 +193,12 @@ async function interactionEvent(interaction:DiscordJS.Interaction<DiscordJS.Cach
                 break
             case 'resume':
                 resume(interaction)
+                break
+            case 'seek':
+                seek(interaction)
+                break
+            case 'test':
+                test(interaction, options)
                 break
             default:
                 console.log("unknown command")

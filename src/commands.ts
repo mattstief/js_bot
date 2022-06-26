@@ -22,7 +22,8 @@ import {
     makeMusicDirectory,
     appendSongQueue,
 	getFileName,
-    sleep
+    sleep,
+    createSilentAudioFile
 } from './functions'
 import {
     songQueue,
@@ -170,7 +171,7 @@ function ping(interaction:BaseCommandInteraction<CacheType>) {
     })
 }
 
-function seek(interaction:BaseCommandInteraction<CacheType>, time:number) {
+function seek(interaction:BaseCommandInteraction<CacheType>) {
     /*TODO implement seek
     ffmpeg could enable this, see here https://trac.ffmpeg.org/wiki/Seeking
     but it feels a bit janky since the AudioPlayer utilizes ffmpeg to play the song, 
@@ -185,6 +186,29 @@ function seek(interaction:BaseCommandInteraction<CacheType>, time:number) {
     })
 }
 
+function test(interaction:BaseCommandInteraction<CacheType>, 
+    options:Omit<DiscordJS.CommandInteractionOptionResolver<DiscordJS.CacheType>, 
+    "getMessage" | "getFocused">) {
+
+    const arg1 = Number(options.get("number")?.value)
+    console.log("number: ", arg1)
+
+    let arg2
+    if (options.get("string") == null) {
+        arg2 = "mt"
+    }
+    else {
+        arg2 = options.get("string")?.value
+    }
+
+    arg2 = arg2?.toString()
+    console.log("string: ", arg2)
+    interaction.reply ({
+        content: createSilentAudioFile(arg1, arg2),
+        ephemeral: false
+    })
+}
+
 export {
     disconnect,
 	purge,
@@ -193,5 +217,6 @@ export {
     ping,
     pause,
     resume,
-    seek
+    seek,
+    test
 }

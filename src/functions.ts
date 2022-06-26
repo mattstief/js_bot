@@ -153,6 +153,17 @@ function sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function createSilentAudioFile(duration:number, name:string|undefined) {
+    //run ffmpeg command to create a silent audio file of the given duration
+    //do system call like this or use a library like ffmpeg-node
+    //ffmpeg -i .\silent.flac -af apad=pad_dur=36000s .\silentlonger.flac
+    if (typeof name === 'undefined') {
+        name = 'none'
+    }
+    return name + duration
+
+}
+
 //export all functions
 export {
     exitCallback,
@@ -165,5 +176,6 @@ export {
     makeMusicDirectory,
     appendSongQueue,
 	getFileName,
-    sleep
+    sleep,
+    createSilentAudioFile
 }
