@@ -18,10 +18,12 @@ import {
     title_length,
     ytdl_options,
     musicDir,
+    tempDir,
     player,
     client
 } from './globals'
-import { disconnect } from './commands';
+import { disconnect } from './commands'
+import {exec} from 'child_process'
 
 async function exitCallback() {
     //const voiceConnection = getVoiceConnection(getGuildEnv())
@@ -106,7 +108,7 @@ function playSong(fileName: string) {
         const resource = createAudioResource(songPath, {
 		    inputType: StreamType.Arbitrary,
 	    })
-        player.play(resource);
+        player.play(resource)
     }
     catch (error) {
         console.error(error);
@@ -142,6 +144,17 @@ function makeMusicDirectory() {
     })
 }
 
+function makeTempDirectory() {
+    fs.mkdir(tempDir, (err) => {
+        if (err && err.code == 'EEXIST') {
+        } else if (err){
+            console.log(err.code)
+        } else {
+            console.log('path \"' + tempDir + '\" not found. Created new directory.')
+        }
+    })
+}
+
 function appendSongQueue(fileName: string) {
     console.log("filename: " + fileName)
     const fileExits:boolean = fs.existsSync(musicDir + fileName)
@@ -153,7 +166,34 @@ function sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function createSilentAudioFile(duration:number, name:string|undefined) {
+function createSilentAudioFile(duration:number, name:string) {
+    // https://iqcode.com/code/javascript/run-command-line-using-javascript
+    //console.log("name: " + name + ".flac")
+    exec('rm temp/*.flac', (error, stdout, stderr) => {
+        if(error){
+            console.log(`error: ${error.message}`)
+            return
+        }
+        if (stderr) {
+            console.log(`stderr: ${stderr}`)
+            return
+        }
+        console.log(`stdout: ${stdout}`)
+    })
+
+    const command = 'ffmpeg -i src/silent_quarter-second.flac -af apad=pad_dur=' + duration + 's temp/' + name + '.flac'
+
+    exec(command, (error, stdout, stderr) => {
+        if(error){
+            console.log(`error: ${error.message}`)
+            return
+        }
+        if (stderr) {
+            console.log(`stderr: ${stderr}`)
+            return
+        }
+        console.log(`stdout: ${stdout}`)
+    })
     //run ffmpeg command to create a silent audio file of the given duration
     //do system call like this or use a library like ffmpeg-node
     //ffmpeg -i .\silent.flac -af apad=pad_dur=36000s .\silentlonger.flac
@@ -174,6 +214,7 @@ export {
     getGuildEnv,
     playSong,
     makeMusicDirectory,
+    makeTempDirectory,
     appendSongQueue,
 	getFileName,
     sleep,

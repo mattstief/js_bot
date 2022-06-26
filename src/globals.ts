@@ -10,6 +10,7 @@ let songQueue: Array<string> = []
 const title_length  : number = 10
 const ytdl_options  : ytdl.downloadOptions = {filter: 'audioonly'}
 const musicDir      : string = 'music/'
+const tempDir       : string = 'temp/'
 const player = createAudioPlayer()
 const client = new DiscordJS.Client({
     intents: [
@@ -26,6 +27,7 @@ export {
 	title_length,
 	ytdl_options,
 	musicDir,
+    tempDir,
 	player,
 	client
 }

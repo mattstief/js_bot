@@ -191,18 +191,17 @@ function test(interaction:BaseCommandInteraction<CacheType>,
     "getMessage" | "getFocused">) {
 
     const arg1 = Number(options.get("number")?.value)
-    console.log("number: ", arg1)
+    //console.log("number: ", arg1)
 
-    let arg2
+    let arg2:string
     if (options.get("string") == null) {
         arg2 = "mt"
     }
     else {
-        arg2 = options.get("string")?.value
+        arg2 = String(options.get("string")?.value)
     }
 
-    arg2 = arg2?.toString()
-    console.log("string: ", arg2)
+    //console.log("string: ", arg2)
     interaction.reply ({
         content: createSilentAudioFile(arg1, arg2),
         ephemeral: false

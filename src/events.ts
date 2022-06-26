@@ -18,6 +18,7 @@ import {
     getGuildEnv,
     playSong,
     makeMusicDirectory,
+    makeTempDirectory,
     appendSongQueue,
 	getFileName,
     sleep,
@@ -82,6 +83,7 @@ async function stateEvent() {
 async function readyEvent() {
     try {    
         makeMusicDirectory()
+        makeTempDirectory()
         const guild = client.guilds.cache.get(getGuildEnv())
         let commands
         if (guild) {
