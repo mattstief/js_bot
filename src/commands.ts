@@ -180,6 +180,7 @@ function seek(interaction:BaseCommandInteraction<CacheType>) {
     We could also split up chunks of the song into chapters(if available from yt video) 
     during download, then save the chapters as separate resources, and seek to the chapter.
     */
+    console.log(client.voice.adapters.get('resource'))
     interaction.reply ({
         content: 'seeked',
         ephemeral: false

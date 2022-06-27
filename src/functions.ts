@@ -106,9 +106,10 @@ function playSong(fileName: string) {
     try {
         const songPath = './music/' + fileName
         const resource = createAudioResource(songPath, {
-		    //inputType: StreamType.Arbitrary,
             inputType: StreamType.Raw
         })
+        //LAVAPLAYER https://github.com/sgoudham-university/Winston-Bot/blob/43e23e51ad806c31074545a25740579c0e8f0111/src/main/java/me/goudham/winston/bot/command/music/FastForward.java
+
         //const readableEnc = resource.playStream.readableEncoding
         //console.log("readableEnc: " + readableEnc)
 
@@ -218,7 +219,6 @@ function createSilentAudioFile(duration:number, name:string) {
         name = 'none'
     }
     return name + duration
-
 }
 
 //export all functions
