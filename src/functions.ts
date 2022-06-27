@@ -106,8 +106,25 @@ function playSong(fileName: string) {
     try {
         const songPath = './music/' + fileName
         const resource = createAudioResource(songPath, {
-		    inputType: StreamType.Arbitrary,
-	    })
+		    //inputType: StreamType.Arbitrary,
+            inputType: StreamType.Raw
+        })
+        //const readableEnc = resource.playStream.readableEncoding
+        //console.log("readableEnc: " + readableEnc)
+
+
+        //console log all event names for resource.playStream
+        // const eventNames = resource.playStream.eventNames()
+        // for(const eventName of eventNames) {
+        //     console.log(eventName)
+        // }
+
+        const edges = resource.edges
+        for (const edge of edges) {
+            console.log(edge)
+        }
+
+        //resource.read() //read an opus packet
         player.play(resource)
     }
     catch (error) {
