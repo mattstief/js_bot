@@ -71,6 +71,7 @@ async function downloadFromURL(url: string, fileName: string) {
     const a = ytdl(url, ytdl_options).pipe(fs.createWriteStream(musicDir + fileName))
     a.on('finish', () => { 
         console.log('download \"' + fileName + '\" finished') 
+        chunkSong(fileName)
         return
     })
 }
@@ -108,7 +109,7 @@ function playSong(fileName: string) {
         const resource = createAudioResource(songPath, {
             inputType: StreamType.Raw
         })
-        //LAVAPLAYER https://github.com/sgoudham-university/Winston-Bot/blob/43e23e51ad806c31074545a25740579c0e8f0111/src/main/java/me/goudham/winston/bot/command/music/FastForward.java
+        //FFT Fast fourier transform
 
         //const readableEnc = resource.playStream.readableEncoding
         //console.log("readableEnc: " + readableEnc)
@@ -134,7 +135,7 @@ function playSong(fileName: string) {
 	return entersState(player, AudioPlayerStatus.Playing, 5e3);
 }
 
-function getFileName(info: ytdl.videoInfo, fileExt: string = 'm4a', substring_len: number = title_length) {
+function getFileName(info: ytdl.videoInfo, fileExt: string = 'mp4', substring_len: number = title_length) {
     const title = info.videoDetails.title
     const titleDelimed = title.split(' ')
     let runningCount = 0
@@ -150,25 +151,16 @@ function getFileName(info: ytdl.videoInfo, fileExt: string = 'm4a', substring_le
     return fileName
 }
 
-function makeMusicDirectory() {
-    fs.mkdir(musicDir, (err) => {
-        if (err && err.code == 'EEXIST') {
-            //music directory already exists
-        } else if (err){
-            console.log(err.code)
-        } else {
-            console.log('path \"' + musicDir + '\" not found. Created new directory.')
-        }
-    })
-}
-
-function makeTempDirectory() {
-    fs.mkdir(tempDir, (err) => {
+function makeDirectory(dirName:string|undefined) {
+    if (dirName == null) {
+        return
+    }
+    fs.mkdir(dirName, (err) => {
         if (err && err.code == 'EEXIST') {
         } else if (err){
             console.log(err.code)
         } else {
-            console.log('path \"' + tempDir + '\" not found. Created new directory.')
+            console.log('path \"' + dirName + '\" not found. Created new directory.')
         }
     })
 }
@@ -181,7 +173,7 @@ function appendSongQueue(fileName: string) {
 }
 
 function sleep(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise(resolve => setTimeout(resolve, ms))
 }
 
 function createSilentAudioFile(duration:number, name:string) {
@@ -221,6 +213,25 @@ function createSilentAudioFile(duration:number, name:string) {
     return name + duration
 }
 
+function chunkSong(fileName:string) {
+    console.log("chunking song " + fileName)
+    //`ffmpeg -i "input_audio_file.mp3" -f segment -segment_time 3600 -c copy output_audio_file_%03d.mp3`
+    const chunksDir = fileName.split('.')[0] + '/'
+    makeDirectory(musicDir + chunksDir)
+    const command = 'ffmpeg -i ./' + musicDir + fileName + ' -f segment -segment_time 5 -c copy ./' + musicDir + chunksDir + '%03d.mp4'
+    exec(command, (error, stdout, stderr) => {
+        if(error){
+            console.log(`error: ${error.message}`)
+            return
+        }
+        if (stderr) {
+            console.log(`stderr: ${stderr}`)
+            return
+        }
+        console.log(`stdout: ${stdout}`)
+    })
+}
+
 //export all functions
 export {
     exitCallback,
@@ -230,8 +241,7 @@ export {
     skipSong,
     getGuildEnv,
     playSong,
-    makeMusicDirectory,
-    makeTempDirectory,
+    makeDirectory,
     appendSongQueue,
 	getFileName,
     sleep,

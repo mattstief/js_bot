@@ -19,7 +19,6 @@ import {
     skipSong,
     getGuildEnv,
     playSong,
-    makeMusicDirectory,
     appendSongQueue,
 	getFileName,
     sleep,
@@ -51,9 +50,18 @@ function purge (interaction:BaseCommandInteraction<CacheType>) {
     //TODO check if song is player - if so, either:
     //1) stop it to free the resource
     //2) skip deletion of that song
+    
+    //TODO free playing resource if any
     const files = fs.readdirSync(musicDir)
+    console.log("FILES: ", files)
     for (const file of files) {
-        fs.unlinkSync(musicDir + file)
+        const isDir:boolean = !file.includes('.')
+        if (isDir) {
+            fs.rmdirSync(musicDir + file, {recursive: true})
+        }
+        else {
+            fs.unlinkSync(musicDir + file)
+        }
     }
     interaction.reply ({
         content: 'purged',

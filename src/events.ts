@@ -17,8 +17,7 @@ import {
     skipSong,
     getGuildEnv,
     playSong,
-    makeMusicDirectory,
-    makeTempDirectory,
+    makeDirectory,
     appendSongQueue,
 	getFileName,
     sleep,
@@ -30,7 +29,8 @@ import {
     ytdl_options,
     musicDir,
     player,
-    client
+    client,
+    tempDir
 } from './globals'
 import {
     disconnect,
@@ -82,8 +82,8 @@ async function stateEvent() {
 
 async function readyEvent() {
     try {    
-        makeMusicDirectory()
-        makeTempDirectory()
+        makeDirectory(musicDir)
+        makeDirectory(tempDir)
         const guild = client.guilds.cache.get(getGuildEnv())
         let commands
         if (guild) {
