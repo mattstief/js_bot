@@ -11,6 +11,7 @@ const title_length  : number = 10
 const ytdl_options  : ytdl.downloadOptions = {filter: 'audioonly'}
 const musicDir      : string = 'music/'
 const tempDir       : string = 'temp/'
+const audioExt      : string = '.m4a'
 const player = createAudioPlayer()
 const client = new DiscordJS.Client({
     intents: [
@@ -28,6 +29,7 @@ export {
 	ytdl_options,
 	musicDir,
     tempDir,
+    audioExt,
 	player,
 	client
 }

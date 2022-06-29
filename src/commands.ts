@@ -22,13 +22,15 @@ import {
     appendSongQueue,
 	getFileName,
     sleep,
-    createSilentAudioFile
+    createSilentAudioFile,
+    chunkSong
 } from './functions'
 import {
     songQueue,
     title_length,
     ytdl_options,
     musicDir,
+    audioExt,
     player,
     client
 } from './globals'
@@ -135,6 +137,10 @@ async function play (interaction:BaseCommandInteraction<CacheType>,
             printVideoChapters(info)
             let fileName = getFileName(info)
             await downloadFromURL(URL, fileName)
+            chunkSong(fileName)
+            
+            const isFirstSong:boolean = (songQueue.length == 0)
+            appendSongQueue(fileName)
             try {
                 const vc = (await members.fetch(interaction.user.id)).voice.channel
                 if (!vc) {
@@ -152,10 +158,9 @@ async function play (interaction:BaseCommandInteraction<CacheType>,
                     console.log("no file name")
                     return
                 }
-                appendSongQueue(fileName)
-                if (songQueue.length == 1) {
+                if (isFirstSong) {
                     console.log("only one song in queue")
-                    await playSong(fileName);
+                    await playSong(songQueue[0]);
                 }
             } catch (error) {
                 console.error(error);

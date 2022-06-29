@@ -19,6 +19,7 @@ import {
     ytdl_options,
     musicDir,
     tempDir,
+    audioExt,
     player,
     client
 } from './globals'
@@ -70,8 +71,7 @@ async function connectToChannel(channel: DiscordJS.VoiceBasedChannel) {
 async function downloadFromURL(url: string, fileName: string) {
     const a = ytdl(url, ytdl_options).pipe(fs.createWriteStream(musicDir + fileName))
     a.on('finish', () => { 
-        console.log('download \"' + fileName + '\" finished') 
-        chunkSong(fileName)
+        console.log('download \"' + fileName + '\" finished')
         return
     })
 }
@@ -87,6 +87,7 @@ function printVideoChapters(info: ytdl.videoInfo) {
 function skipSong() {
     let currentSong = songQueue.shift()
     console.log("SHIFTING!")
+    //check for multiple songs - rather than chunks
     if (songQueue.length > 0) {
         playSong(songQueue[0])
     }
@@ -105,8 +106,8 @@ function getGuildEnv() {
 function playSong(fileName: string) {
     console.log("playing song" + fileName)
     try {
-        const songPath = './music/' + fileName
-        const resource = createAudioResource(songPath, {
+        //appendSongQueue(fileName)
+        const resource = createAudioResource(fileName, {
             inputType: StreamType.Raw
         })
         //FFT Fast fourier transform
@@ -121,10 +122,10 @@ function playSong(fileName: string) {
         //     console.log(eventName)
         // }
 
-        const edges = resource.edges
-        for (const edge of edges) {
-            console.log(edge)
-        }
+        // const edges = resource.edges
+        // for (const edge of edges) {
+        //     console.log(edge)
+        // }
 
         //resource.read() //read an opus packet
         player.play(resource)
@@ -135,7 +136,7 @@ function playSong(fileName: string) {
 	return entersState(player, AudioPlayerStatus.Playing, 5e3);
 }
 
-function getFileName(info: ytdl.videoInfo, fileExt: string = 'mp4', substring_len: number = title_length) {
+function getFileName(info: ytdl.videoInfo, fileExt: string = audioExt, substring_len: number = title_length) {
     const title = info.videoDetails.title
     const titleDelimed = title.split(' ')
     let runningCount = 0
@@ -147,7 +148,7 @@ function getFileName(info: ytdl.videoInfo, fileExt: string = 'mp4', substring_le
         i++
     }
     const titleSubstr = title.substring(0, substring_len)
-    fileName += '.' + fileExt
+    fileName += fileExt
     return fileName
 }
 
@@ -165,11 +166,19 @@ function makeDirectory(dirName:string|undefined) {
     })
 }
 
-function appendSongQueue(fileName: string) {
-    console.log("filename: " + fileName)
-    const fileExits:boolean = fs.existsSync(musicDir + fileName)
-    songQueue.push(fileName)
-    console.log("song queue: " + songQueue)
+function appendSongQueue(dirName: string) {
+    const songdir:string = dirName.split('.')[0] + '/'
+    const dirPath = './' + musicDir + songdir
+    console.log("dirPath: " + dirPath)
+    fs.readdir(dirPath, (err, files) => {
+        if (files != null) {
+            for(const file of files) {
+                    const strPath = dirPath + file
+                    console.log("songQueue element: " + strPath)
+                    songQueue.push(strPath)
+            }
+        }
+    })
 }
 
 function sleep(ms: number) {
@@ -218,7 +227,7 @@ function chunkSong(fileName:string) {
     //`ffmpeg -i "input_audio_file.mp3" -f segment -segment_time 3600 -c copy output_audio_file_%03d.mp3`
     const chunksDir = fileName.split('.')[0] + '/'
     makeDirectory(musicDir + chunksDir)
-    const command = 'ffmpeg -i ./' + musicDir + fileName + ' -f segment -segment_time 5 -c copy ./' + musicDir + chunksDir + '%03d.mp4'
+    const command = 'ffmpeg -i ./' + musicDir + fileName + ' -f segment -segment_time 10 -c copy ./' + musicDir + chunksDir + '%03d' + audioExt
     exec(command, (error, stdout, stderr) => {
         if(error){
             console.log(`error: ${error.message}`)
@@ -245,5 +254,6 @@ export {
     appendSongQueue,
 	getFileName,
     sleep,
-    createSilentAudioFile
+    createSilentAudioFile,
+    chunkSong
 }
