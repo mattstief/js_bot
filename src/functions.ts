@@ -70,10 +70,8 @@ async function connectToChannel(channel: DiscordJS.VoiceBasedChannel) {
 
 async function downloadFromURL(url: string, fileName: string) {
     const a = ytdl(url, ytdl_options).pipe(fs.createWriteStream(musicDir + fileName))
-    a.on('finish', () => { 
-        console.log('download \"' + fileName + '\" finished')
-        return
-    })
+    return a
+
 }
 
 function printVideoChapters(info: ytdl.videoInfo) {
@@ -105,10 +103,12 @@ function getGuildEnv() {
 
 function playSong(fileName: string) {
     console.log("playing song" + fileName)
+    console.log("songQueue length: " + songQueue.length)
+    // console.log("songQueue: " + songQueue)
     try {
         //appendSongQueue(fileName)
         const resource = createAudioResource(fileName, {
-            inputType: StreamType.Raw
+            inputType: StreamType.Opus
         })
         //FFT Fast fourier transform
 
@@ -166,17 +166,20 @@ function makeDirectory(dirName:string|undefined) {
     })
 }
 
-function appendSongQueue(dirName: string) {
+async function appendSongQueue(dirName: string) {
     const songdir:string = dirName.split('.')[0] + '/'
     const dirPath = './' + musicDir + songdir
     console.log("dirPath: " + dirPath)
     fs.readdir(dirPath, (err, files) => {
         if (files != null) {
             for(const file of files) {
-                    const strPath = dirPath + file
-                    console.log("songQueue element: " + strPath)
-                    songQueue.push(strPath)
+                const strPath = dirPath + file
+                console.log("songQueue element: " + strPath)
+                songQueue.push(strPath)
             }
+        }
+        else{
+            console.log("no files found in song dir")
         }
     })
 }
@@ -227,8 +230,8 @@ function chunkSong(fileName:string) {
     //`ffmpeg -i "input_audio_file.mp3" -f segment -segment_time 3600 -c copy output_audio_file_%03d.mp3`
     const chunksDir = fileName.split('.')[0] + '/'
     makeDirectory(musicDir + chunksDir)
-    const command = 'ffmpeg -i ./' + musicDir + fileName + ' -f segment -segment_time 10 -c copy ./' + musicDir + chunksDir + '%03d' + audioExt
-    exec(command, (error, stdout, stderr) => {
+    const command = 'ffmpeg -i ./' + musicDir + fileName + ' -f segment -segment_time 5 -c copy ./' + musicDir + chunksDir + '%03d' + audioExt
+    const child = exec(command, (error, stdout, stderr) => {
         if(error){
             console.log(`error: ${error.message}`)
             return
@@ -239,6 +242,7 @@ function chunkSong(fileName:string) {
         }
         console.log(`stdout: ${stdout}`)
     })
+    return child
 }
 
 //export all functions
@@ -255,5 +259,5 @@ export {
 	getFileName,
     sleep,
     createSilentAudioFile,
-    chunkSong
+    chunkSong,
 }

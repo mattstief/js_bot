@@ -23,7 +23,7 @@ import {
 	getFileName,
     sleep,
     createSilentAudioFile,
-    chunkSong
+    chunkSong,
 } from './functions'
 import {
     songQueue,
@@ -109,10 +109,6 @@ function resume(interaction:BaseCommandInteraction<CacheType>) {
 async function play (interaction:BaseCommandInteraction<CacheType>, 
     options:Omit<DiscordJS.CommandInteractionOptionResolver<DiscordJS.CacheType>, 
     "getMessage" | "getFocused">) {
-    //console.log("play command received") 
-    if (interaction.member) {
-        //console.log("member present")
-    }
     const userGuild = client.guilds.cache.get(getGuildEnv())
     const members = await userGuild?.members
     if (!members || !userGuild?.memberCount) {
@@ -120,7 +116,6 @@ async function play (interaction:BaseCommandInteraction<CacheType>,
     }
 
     const playArg = options.get('link_or_name')
-    //console.log(playArg)
     if (playArg == null) {
         return
     }
@@ -128,43 +123,45 @@ async function play (interaction:BaseCommandInteraction<CacheType>,
         return
     }
     const URL = playArg.value
-    //console.log(URL)
     const isValidLink:boolean = ytdl.validateURL(URL)
-    //console.log("valid link: ", isValidLink)
     if (isValidLink) {  //download it, then play to vc
         //TODO check if link has already been downloaded before attempting download
         ytdl.getInfo(URL).then(async info => {
             printVideoChapters(info)
             let fileName = getFileName(info)
-            await downloadFromURL(URL, fileName)
-            chunkSong(fileName)
-            
-            const isFirstSong:boolean = (songQueue.length == 0)
-            appendSongQueue(fileName)
-            try {
-                const vc = (await members.fetch(interaction.user.id)).voice.channel
-                if (!vc) {
-                    interaction.reply ({
-                        content: 'not in a voice channel',
-                        ephemeral: false
+            let a = downloadFromURL(URL, fileName)
+            ;(await a).once('finish', async () => {
+                const child = chunkSong(fileName)
+                child.once('close', async () => {
+                    const isFirstSong:boolean = (songQueue.length == 0)
+                    await appendSongQueue(fileName).then(async () => {
+                        try {
+                            const vc = (await members.fetch(interaction.user.id)).voice.channel
+                            if (!vc) {
+                                interaction.reply ({
+                                    content: 'not in a voice channel',
+                                    ephemeral: false
+                                })
+                                return
+                            }
+                            const connection = await connectToChannel(vc)
+                            if (!connection) {
+                                return
+                            }
+                            if (!fileName) {
+                                console.log("no file name")
+                                return
+                            }
+                            if (isFirstSong) {
+                                console.log("only one song in queue")
+                                await playSong(songQueue[0]);
+                            }
+                        } catch (error) {
+                            console.error(error);
+                        }
                     })
-                    return
-                }
-                const connection = await connectToChannel(vc)
-                if (!connection) {
-                    return
-                }
-                if (!fileName) {
-                    console.log("no file name")
-                    return
-                }
-                if (isFirstSong) {
-                    console.log("only one song in queue")
-                    await playSong(songQueue[0]);
-                }
-            } catch (error) {
-                console.error(error);
-            }
+                })  
+            })
         })
 
     }
