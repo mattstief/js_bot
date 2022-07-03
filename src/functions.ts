@@ -165,7 +165,7 @@ function getResource(songPath:string){
 function playResource(resource:AudioResource) {
     try {
         player.play(resource)
-        const delay = 5
+        const delay = 8
         const chunkms = (chunkTime * 1000) - delay 
         //variation in exact timing is hard to predict. This is a hacky way to get around it - hardware dependent. 
         //This solution is "hot swapping" the chunk resource. Instead it should either 1) ensure that the chunk is 
@@ -296,7 +296,10 @@ function chunkSong(fileName:string) {
     //`ffmpeg -i "input_audio_file.mp3" -f segment -segment_time 3600 -c copy output_audio_file_%03d.mp3`
     const chunksDir = fileName.split('.')[0] + '/'
     makeDirectory(musicDir + chunksDir)
-    const command = 'ffmpeg -i ./' + musicDir + fileName + ' -f segment -segment_time ' + chunkTime + ' -c copy ./' + musicDir + chunksDir + '%03d' + audioExt
+    const input = './' + musicDir + fileName
+    const output = './' + musicDir + chunksDir + '%03d' + audioExt
+    //const command = 'ffmpeg -i ' + input + ' -f segment -segment_time ' + chunkTime + ' -c copy -shortest ' + output
+    const command = 'ffmpeg -i ./' + musicDir + fileName + ' -f segment -segment_time ' + chunkTime + ' -c copy -shortest ./' + musicDir + chunksDir + '%03d' + audioExt
     const child = exec(command, (error, stdout, stderr) => {
         if(error){
             console.log(`error: ${error.message}`)
