@@ -19,7 +19,10 @@ import {
     skipSong,
     getGuildEnv,
     playSong,
+    playResource,
+    getResource,
     appendSongQueue,
+    appendChunkQueue,
 	getFileName,
     sleep,
     createSilentAudioFile,
@@ -27,6 +30,7 @@ import {
 } from './functions'
 import {
     songQueue,
+    chunkQueue,
     title_length,
     ytdl_options,
     musicDir,
@@ -134,7 +138,8 @@ async function play (interaction:BaseCommandInteraction<CacheType>,
                 const child = chunkSong(fileName)
                 child.once('close', async () => {
                     const isFirstSong:boolean = (songQueue.length == 0)
-                    await appendSongQueue(fileName).then(async () => {
+                    //await appendSongQueue(fileName).then(async () => {
+                    await appendChunkQueue(fileName).then(async () => {
                         try {
                             const vc = (await members.fetch(interaction.user.id)).voice.channel
                             if (!vc) {
@@ -154,7 +159,8 @@ async function play (interaction:BaseCommandInteraction<CacheType>,
                             }
                             if (isFirstSong) {
                                 console.log("only one song in queue")
-                                await playSong(songQueue[0]);
+                                await playResource(chunkQueue[0])
+                                //await playSong(songQueue[0]);
                             }
                         } catch (error) {
                             console.error(error);

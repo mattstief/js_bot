@@ -10,12 +10,15 @@ import {
 	VoiceConnectionStatus,
     getVoiceConnection,
     AudioPlayer,
+    AudioResource,
 } from '@discordjs/voice'
 import { createDiscordJSAdapter } from './adapter'
 import * as fs from 'fs'
 import {
     songQueue,
+    chunkQueue,
     title_length,
+    chunkTime,
     ytdl_options,
     musicDir,
     tempDir,
@@ -92,6 +95,16 @@ function skipSong() {
     return currentSong
 }
 
+function skipChunk() {
+    let currentChunk = chunkQueue.shift()
+    console.log("SHIFTING!")
+    //check for multiple songs - rather than chunks
+    if (chunkQueue.length > 0) {
+        playResource(chunkQueue[0])
+    }
+    return currentChunk
+}
+
 function getGuildEnv() {
     const guild = process.env.GUILD_ID
     if (guild == null) {
@@ -110,6 +123,7 @@ function playSong(fileName: string) {
         const resource = createAudioResource(fileName, {
             inputType: StreamType.Opus
         })
+        
         //FFT Fast fourier transform
 
         //const readableEnc = resource.playStream.readableEncoding
@@ -134,6 +148,35 @@ function playSong(fileName: string) {
         console.error(error);
     }
 	return entersState(player, AudioPlayerStatus.Playing, 5e3);
+}
+
+function getResource(songPath:string){
+    try {
+        return createAudioResource(songPath, {
+            inputType: StreamType.Opus
+        })
+    }
+    catch (error) {
+        console.error(error);
+    }
+    return null
+}
+
+function playResource(resource:AudioResource) {
+    try {
+        player.play(resource)
+        const delay = 5
+        const chunkms = (chunkTime * 1000) - delay 
+        //variation in exact timing is hard to predict. This is a hacky way to get around it - hardware dependent. 
+        //This solution is "hot swapping" the chunk resource. Instead it should either 1) ensure that the chunk is 
+        //depleted before the next chunk is played, or 
+        //2) use a separate thread to play the chunks.
+        //3) an empircal way to calculate the delay would work too. 
+        setTimeout(skipChunk, chunkms)
+        return entersState(player, AudioPlayerStatus.Playing, 100)
+    } catch (error) {
+        console.error(error);
+    }
 }
 
 function getFileName(info: ytdl.videoInfo, fileExt: string = audioExt, substring_len: number = title_length) {
@@ -176,6 +219,29 @@ async function appendSongQueue(dirName: string) {
                 const strPath = dirPath + file
                 console.log("songQueue element: " + strPath)
                 songQueue.push(strPath)
+            }
+        }
+        else{
+            console.log("no files found in song dir")
+        }
+    })
+}
+
+async function appendChunkQueue(dirName: string) {
+    const songdir:string = dirName.split('.')[0] + '/'
+    const dirPath = './' + musicDir + songdir
+    console.log("dirPath: " + dirPath)
+    fs.readdir(dirPath, (err, files) => {
+        if (files != null) {
+            for(const file of files) {
+                const strPath = dirPath + file
+                const resource = getResource(strPath)
+                if (resource != null) {
+                    chunkQueue.push(resource)
+                }
+                else {
+                    console.log("resource is null")
+                }
             }
         }
         else{
@@ -230,7 +296,7 @@ function chunkSong(fileName:string) {
     //`ffmpeg -i "input_audio_file.mp3" -f segment -segment_time 3600 -c copy output_audio_file_%03d.mp3`
     const chunksDir = fileName.split('.')[0] + '/'
     makeDirectory(musicDir + chunksDir)
-    const command = 'ffmpeg -i ./' + musicDir + fileName + ' -f segment -segment_time 5 -c copy ./' + musicDir + chunksDir + '%03d' + audioExt
+    const command = 'ffmpeg -i ./' + musicDir + fileName + ' -f segment -segment_time ' + chunkTime + ' -c copy ./' + musicDir + chunksDir + '%03d' + audioExt
     const child = exec(command, (error, stdout, stderr) => {
         if(error){
             console.log(`error: ${error.message}`)
@@ -252,10 +318,14 @@ export {
     downloadFromURL,
     printVideoChapters,
     skipSong,
+    skipChunk,
     getGuildEnv,
     playSong,
+    playResource,
+    getResource,
     makeDirectory,
     appendSongQueue,
+    appendChunkQueue,
 	getFileName,
     sleep,
     createSilentAudioFile,

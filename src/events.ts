@@ -21,7 +21,8 @@ import {
     appendSongQueue,
 	getFileName,
     sleep,
-    createSilentAudioFile
+    createSilentAudioFile,
+    skipChunk
 } from './functions'
 import {
     songQueue,
@@ -30,7 +31,8 @@ import {
     musicDir,
     player,
     client,
-    tempDir
+    tempDir,
+    chunkQueue
 } from './globals'
 import {
     disconnect,
@@ -72,9 +74,13 @@ async function stateEvent() {
             break;
         case AudioPlayerStatus.Idle:
             console.log("idle")
-            if (songQueue.length > 0) {
-                skipSong()
-            }
+            // if (songQueue.length > 0) {
+            //     skipSong()
+            // }
+            // if (chunkQueue.length > 0) {
+            //     skipChunk()
+            //     console.log("chonkers: " + chunkQueue.length)
+            // }
             break;
         //case AudioPlayerStatus.Error || AudioPlayerStatus.Disconnected:
     }
