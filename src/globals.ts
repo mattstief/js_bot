@@ -13,7 +13,7 @@ const chunkTime : number = 10
 const ytdl_options  : ytdl.downloadOptions = {filter: 'audioonly'}
 const musicDir      : string = 'music/'
 const tempDir       : string = 'temp/'
-const audioExt      : string = '.mp4'
+const audioExt      : string = '.mp3'
 const player = createAudioPlayer()
 const client = new DiscordJS.Client({
     intents: [

@@ -165,7 +165,7 @@ function getResource(songPath:string){
 function playResource(resource:AudioResource) {
     try {
         player.play(resource)
-        const delay = 3
+        const delay = 6
         const chunkms = (chunkTime * 1000) - delay 
         //const durationMeta = resource?.edges
         //const durationMeta = resource?.
@@ -176,7 +176,7 @@ function playResource(resource:AudioResource) {
         //2) use a separate thread to play the chunks.
         //3) an empircal way to calculate the delay would work too. 
         setTimeout(skipChunk, chunkms)
-        return entersState(player, AudioPlayerStatus.Playing, 1000)
+        return entersState(player, AudioPlayerStatus.Playing, 100000)
     } catch (error) {
         console.error(error);
     }
@@ -232,15 +232,18 @@ async function appendSongQueue(dirName: string) {
 
 async function appendChunkQueue(dirName: string) {
     const songdir:string = dirName.split('.')[0] + '/'
-    const dirPath = './' + musicDir + songdir
+    const dirPath:string = './' + musicDir + songdir
     console.log("dirPath: " + dirPath)
     fs.readdir(dirPath, (err, files) => {
         if (files != null) {
             for(const file of files) {
-                const strPath = dirPath + file
-                const resource = getResource(strPath)
+                const strPath:string = dirPath + file
+                const resource:AudioResource|null = getResource(strPath)
                 if (resource != null) {
-                    chunkQueue.push(resource)
+                    const validResource:boolean = (resource.playStream.readable)
+                    if (validResource) {
+                        chunkQueue.push(resource)
+                    }
                 }
                 else {
                     console.log("resource is null")
@@ -302,11 +305,11 @@ function chunkSong(fileName:string) {
     const input = './' + musicDir + fileName
     const output = './' + musicDir + chunksDir + '%03d' + audioExt
     //const command = 'ffmpeg -i ' + input + ' -f segment -segment_time ' + chunkTime + ' -c copy -shortest ' + output
-    const command = 'ffmpeg -i ./' + musicDir + fileName + ' -f segment -segment_time ' + chunkTime + ' -c copy -shortest ./' + musicDir + chunksDir + '%03d' + audioExt
+    const command = 'ffmpeg -i ./' + musicDir + fileName + ' -f segment -segment_time ' + chunkTime + ' ./' + musicDir + chunksDir + '%03d' + audioExt
     const child = exec(command, (error, stdout, stderr) => {
         if(error){
             console.log(`error: ${error.message}`)
-            return
+            return 
         }
         if (stderr) {
             console.log(`stderr: ${stderr}`)
