@@ -16,6 +16,7 @@ import { createDiscordJSAdapter } from './adapter'
 import * as fs from 'fs'
 import {
     songQueue,
+    songInfo,
     chunkQueue,
     title_length,
     chunkTime,
@@ -292,8 +293,44 @@ function chunkSong(fileName:string) {
     return child
 }
 
-async function chunkByChapter() {
-    
+async function chunkByChapter(songFile:string) {
+    let i = 0
+    for(const song in songQueue) {
+        //must be called after song is added to queue
+        if (songQueue[i] == songFile) {
+            break
+        }
+        i++
+    }
+    if (i >= songQueue.length) {
+        console.log("song not in queue")
+        return
+    }
+
+    const chapters = songInfo[i].videoDetails?.chapters
+    if (chapters.length > 0) {
+        //split song into chunks by chapter
+        for (const chapter in chapters) {
+            const chapterName = chapters[chapter].title
+            const chapterStart = chapters[chapter].start_time
+            const chapterFileName = getFileName(songInfo[i], audioExt, chapterName.length)
+            const chapterFile = chapterFileName + '.flac'
+            const chapterPath = musicDir + songFile + '/' + chapterFile
+            //const chapterCommand = 'ffmpeg -i ' + musicDir + songFile + ' -ss ' + chapterStart + ' -t ' + chapterDuration + ' -c copy ' + chapterPath
+            // exec(chapterCommand, (error, stdout, stderr) => {
+            //     if(error){
+            //         console.log(`error: ${error.message}`)
+            //         return 
+            //     }
+            //     if (stderr) {
+            //         console.log(`stderr: ${stderr}`)
+            //         return
+            //     }
+            //     console.log(`stdout: ${stdout}`)
+            // })
+        }
+
+    }
 }
 
 //export all functions
