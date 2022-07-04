@@ -121,7 +121,7 @@ function playSong(fileName: string) {
     try {
         //appendSongQueue(fileName)
         const resource = createAudioResource(fileName, {
-            inputType: StreamType.Opus
+            inputType: StreamType.Arbitrary
         })
         
         //FFT Fast fourier transform
@@ -165,15 +165,18 @@ function getResource(songPath:string){
 function playResource(resource:AudioResource) {
     try {
         player.play(resource)
-        const delay = 8
+        const delay = 3
         const chunkms = (chunkTime * 1000) - delay 
+        //const durationMeta = resource?.edges
+        //const durationMeta = resource?.
+        //console.log("chunktime: ", durationMeta)
         //variation in exact timing is hard to predict. This is a hacky way to get around it - hardware dependent. 
         //This solution is "hot swapping" the chunk resource. Instead it should either 1) ensure that the chunk is 
         //depleted before the next chunk is played, or 
         //2) use a separate thread to play the chunks.
         //3) an empircal way to calculate the delay would work too. 
         setTimeout(skipChunk, chunkms)
-        return entersState(player, AudioPlayerStatus.Playing, 100)
+        return entersState(player, AudioPlayerStatus.Playing, 1000)
     } catch (error) {
         console.error(error);
     }
