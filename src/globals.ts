@@ -6,6 +6,7 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 let songQueue: Array<string> = []
+let songInfo : Array<ytdl.videoInfo>
 let chunkQueue: Array<AudioResource> = []
 
 const title_length  : number = 10
@@ -27,6 +28,7 @@ const client = new DiscordJS.Client({
 //export all const variables in file
 export {
 	songQueue,
+    songInfo,
     chunkQueue,
 	title_length,
     chunkTime,

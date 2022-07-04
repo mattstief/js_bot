@@ -27,6 +27,7 @@ import {
     sleep,
     createSilentAudioFile,
     chunkSong,
+    chunkByChapter
 } from './functions'
 import {
     songQueue,
@@ -134,39 +135,36 @@ async function play (interaction:BaseCommandInteraction<CacheType>,
             printVideoChapters(info)
             let fileName = getFileName(info)
             let a = downloadFromURL(URL, fileName)
-            ;(await a).once('finish', async () => {
-                const child = chunkSong(fileName)
-                child.once('close', async () => {
-                    const isFirstSong:boolean = (songQueue.length == 0)
-                    //await appendSongQueue(fileName).then(async () => {
-                    await appendChunkQueue(fileName).then(async () => {
-                        try {
-                            const vc = (await members.fetch(interaction.user.id)).voice.channel
-                            if (!vc) {
-                                interaction.reply ({
-                                    content: 'not in a voice channel',
-                                    ephemeral: false
-                                })
-                                return
-                            }
-                            const connection = await connectToChannel(vc)
-                            if (!connection) {
-                                return
-                            }
-                            if (!fileName) {
-                                console.log("no file name")
-                                return
-                            }
-                            if (isFirstSong) {
-                                console.log("only one song in queue")
-                                await playResource(chunkQueue[0])
-                                //await playSong(songQueue[0]);
-                            }
-                        } catch (error) {
-                            console.error(error);
+            ;(await a).once('close', async () => {
+                const isFirstSong:boolean = (songQueue.length == 0)
+                //await appendSongQueue(fileName).then(async () => {
+                await appendSongQueue(fileName).then(async () => {
+                    try {
+                        const vc = (await members.fetch(interaction.user.id)).voice.channel
+                        if (!vc) {
+                            interaction.reply ({
+                                content: 'not in a voice channel',
+                                ephemeral: false
+                            })
+                            return
                         }
-                    })
-                })  
+                        const connection = await connectToChannel(vc)
+                        if (!connection) {
+                            return
+                        }
+                        if (!fileName) {
+                            console.log("no file name")
+                            return
+                        }
+                        if (isFirstSong) {
+                            console.log("only one song in queue")
+                            //await playResource(chunkQueue[0])
+                            await playSong(songQueue[0]);
+                        }
+                    } catch (error) {
+                        console.error(error);
+                    }
+                }) 
             })
         })
 

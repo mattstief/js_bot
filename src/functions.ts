@@ -115,33 +115,15 @@ function getGuildEnv() {
 }
 
 function playSong(fileName: string) {
-    console.log("playing song" + fileName)
+    console.log("playing song " + fileName)
     console.log("songQueue length: " + songQueue.length)
     // console.log("songQueue: " + songQueue)
+    const filePath:string = './' + musicDir + fileName
     try {
         //appendSongQueue(fileName)
-        const resource = createAudioResource(fileName, {
+        const resource = createAudioResource(filePath, {
             inputType: StreamType.Arbitrary
         })
-        
-        //FFT Fast fourier transform
-
-        //const readableEnc = resource.playStream.readableEncoding
-        //console.log("readableEnc: " + readableEnc)
-
-
-        //console log all event names for resource.playStream
-        // const eventNames = resource.playStream.eventNames()
-        // for(const eventName of eventNames) {
-        //     console.log(eventName)
-        // }
-
-        // const edges = resource.edges
-        // for (const edge of edges) {
-        //     console.log(edge)
-        // }
-
-        //resource.read() //read an opus packet
         player.play(resource)
     }
     catch (error) {
@@ -167,6 +149,7 @@ function playResource(resource:AudioResource) {
         player.play(resource)
         const delay = 6
         const chunkms = (chunkTime * 1000) - delay 
+        const x = resource.playStream.readableLength 
         //const durationMeta = resource?.edges
         //const durationMeta = resource?.
         //console.log("chunktime: ", durationMeta)
@@ -212,22 +195,11 @@ function makeDirectory(dirName:string|undefined) {
     })
 }
 
-async function appendSongQueue(dirName: string) {
-    const songdir:string = dirName.split('.')[0] + '/'
-    const dirPath = './' + musicDir + songdir
-    console.log("dirPath: " + dirPath)
-    fs.readdir(dirPath, (err, files) => {
-        if (files != null) {
-            for(const file of files) {
-                const strPath = dirPath + file
-                console.log("songQueue element: " + strPath)
-                songQueue.push(strPath)
-            }
-        }
-        else{
-            console.log("no files found in song dir")
-        }
-    })
+async function appendSongQueue(songName: string) {
+    const fileExits:boolean = fs.existsSync(musicDir + songName)
+    if (fileExits) {
+        songQueue.push(songName)
+    }
 }
 
 async function appendChunkQueue(dirName: string) {
@@ -320,6 +292,10 @@ function chunkSong(fileName:string) {
     return child
 }
 
+async function chunkByChapter() {
+    
+}
+
 //export all functions
 export {
     exitCallback,
@@ -339,4 +315,5 @@ export {
     sleep,
     createSilentAudioFile,
     chunkSong,
+    chunkByChapter,
 }

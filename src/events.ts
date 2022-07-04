@@ -47,15 +47,16 @@ import {
 } from './commands'
 
 addExitCallback((signal) => {
+    disconnect()
+    //set status to offline
+    client.user?.setPresence({
+        //pid: process.pid,
+        status: 'invisible',
+    });
     console.log(`Exiting with signal ${signal}`)
     if (player.state.status == AudioPlayerStatus.Playing) {
         player.stop()
     }
-    // if (client.voice)
-    //if connected to a voice channel, disconnect
-    // if (VoiceConnectionStatus == VoiceConnectionStatus.Connected) {
-    //     getVoiceConnection. disconnect()
-    // }
 })
 
 async function stateEvent() {
@@ -74,13 +75,9 @@ async function stateEvent() {
             break;
         case AudioPlayerStatus.Idle:
             console.log("idle")
-            // if (songQueue.length > 0) {
-            //     skipSong()
-            // }
-            // if (chunkQueue.length > 0) {
-            //     skipChunk()
-            //     console.log("chonkers: " + chunkQueue.length)
-            // }
+            if (songQueue.length > 0) {
+                skipSong()
+            }
             break;
         //case AudioPlayerStatus.Error || AudioPlayerStatus.Disconnected:
     }
