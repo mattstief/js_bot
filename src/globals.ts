@@ -6,7 +6,7 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 let songQueue: Array<string> = []
-let songInfo : Array<ytdl.videoInfo>
+let songInfo : Array<ytdl.videoInfo> = []
 let chunkQueue: Array<AudioResource> = []
 
 const title_length  : number = 10

@@ -1,5 +1,6 @@
 import ytdl from 'ytdl-core'
 import DiscordJS from 'discord.js';
+import {promisify} from 'util'
 import {
 	joinVoiceChannel,
 	createAudioPlayer,
@@ -88,6 +89,7 @@ function printVideoChapters(info: ytdl.videoInfo) {
 
 function skipSong() {
     let currentSong = songQueue.shift()
+    let currInfo = songInfo.shift()
     console.log("SHIFTING!")
     //check for multiple songs - rather than chunks
     if (songQueue.length > 0) {
@@ -203,6 +205,13 @@ async function appendSongQueue(songName: string) {
     }
 }
 
+async function appendSongInfo(info: ytdl.videoInfo) {
+    const validInfo:boolean = (info.videoDetails != null)
+    if (validInfo) {
+        songInfo.push(info)
+    }
+}
+
 async function appendChunkQueue(dirName: string) {
     const songdir:string = dirName.split('.')[0] + '/'
     const dirPath:string = './' + musicDir + songdir
@@ -293,43 +302,53 @@ function chunkSong(fileName:string) {
     return child
 }
 
-async function chunkByChapter(songFile:string) {
-    let i = 0
-    for(const song in songQueue) {
-        //must be called after song is added to queue
-        if (songQueue[i] == songFile) {
-            break
-        }
-        i++
-    }
-    if (i >= songQueue.length) {
-        console.log("song not in queue")
-        return
-    }
-
-    const chapters = songInfo[i].videoDetails?.chapters
+async function chunkByChapter(songFile:string, info:ytdl.videoInfo) {
+    const chapters = info?.videoDetails?.chapters
     if (chapters.length > 0) {
+        console.log("chapters found")
+        let processes:Promise<unknown>[] = [] //array of child processes
+        const sourceMusic:string = './' + musicDir + songFile
         //split song into chunks by chapter
-        for (const chapter in chapters) {
-            const chapterName = chapters[chapter].title
-            const chapterStart = chapters[chapter].start_time
-            const chapterFileName = getFileName(songInfo[i], audioExt, chapterName.length)
-            const chapterFile = chapterFileName + '.flac'
-            const chapterPath = musicDir + songFile + '/' + chapterFile
-            //const chapterCommand = 'ffmpeg -i ' + musicDir + songFile + ' -ss ' + chapterStart + ' -t ' + chapterDuration + ' -c copy ' + chapterPath
-            // exec(chapterCommand, (error, stdout, stderr) => {
-            //     if(error){
-            //         console.log(`error: ${error.message}`)
-            //         return 
-            //     }
-            //     if (stderr) {
-            //         console.log(`stderr: ${stderr}`)
-            //         return
-            //     }
-            //     console.log(`stdout: ${stdout}`)
-            // })
-        }
+        for (let j = 0; j < chapters.length; j++) {
+            const chapterName:string = chapters[j].title
+            const chapterStart:number = chapters[j].start_time
+            let chapterEnd:number
+            if (j >= (chapters.length - 1)) {
+                chapterEnd = parseInt(info?.videoDetails?.lengthSeconds)
+                console.log("last chapter: " + chapterEnd)
+            }
+            else {
+                chapterEnd = chapters[j + 1]?.start_time
+            }
+            // const chapterFileName = chapterName.replace(' ', '') + audioExt
+            let chapterFileName:string = chapterName.trim()
+            while(chapterFileName.includes(' ')) {
+                chapterFileName = chapterFileName.replace(' ', '_')
+            }
+            chapterFileName = chapterFileName + audioExt
+            const chapterPath:string = './' + musicDir + chapterFileName
 
+            const chapterCommand:string = 'ffmpeg -i ' + sourceMusic + ' -ss ' + chapterStart + ' -t ' + (chapterEnd-chapterStart) + ' ' + chapterPath
+
+            const child = promisify(() => exec(chapterCommand, (error, stdout, stderr) => {
+                if(error){
+                    console.log(`error: ${error.message}`);
+                    return;
+                }
+                if (stderr) {
+                    console.log(`stderr: ${stderr}`);
+                    return;
+                }
+                //console.log(`stdout: ${stdout}`);
+            }))            
+            processes.push(child())
+            appendSongQueue(chapterFileName)
+        }
+        return processes
+    }
+    else{
+         //else add the song to the song queue
+        console.log("chapters not found")
     }
 }
 
@@ -347,6 +366,7 @@ export {
     getResource,
     makeDirectory,
     appendSongQueue,
+    appendSongInfo,
     appendChunkQueue,
 	getFileName,
     sleep,

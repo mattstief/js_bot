@@ -22,6 +22,7 @@ import {
     playResource,
     getResource,
     appendSongQueue,
+    appendSongInfo,
     appendChunkQueue,
 	getFileName,
     sleep,
@@ -132,14 +133,22 @@ async function play (interaction:BaseCommandInteraction<CacheType>,
     if (isValidLink) {  //download it, then play to vc
         //TODO check if link has already been downloaded before attempting download
         ytdl.getInfo(URL).then(async info => {
-            printVideoChapters(info)
+            //printVideoChapters(info)
             let fileName = getFileName(info)
             let a = downloadFromURL(URL, fileName)
-            ;(await a).once('close', async () => {
-                const isFirstSong:boolean = (songQueue.length == 0)
-                //await appendSongQueue(fileName).then(async () => {
-                await appendSongQueue(fileName).then(async () => {
+            //appendSongInfo(info).then(async () => {
+                ;(await a).once('close', async () => {
+                    const isFirstSong:boolean = (songQueue.length == 0)
+                    //append chapters to queue
                     try {
+                        let chapterProcessing = chunkByChapter(fileName, info);
+                        if(chapterProcessing != null) {
+                            for(const promise in chapterProcessing) {
+                                if(promise != null) {
+                                    await promise
+                                }
+                            }
+                        }
                         const vc = (await members.fetch(interaction.user.id)).voice.channel
                         if (!vc) {
                             interaction.reply ({
@@ -164,8 +173,7 @@ async function play (interaction:BaseCommandInteraction<CacheType>,
                     } catch (error) {
                         console.error(error);
                     }
-                }) 
-            })
+                })
         })
 
     }
