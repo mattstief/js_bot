@@ -136,21 +136,26 @@ async function play (interaction:BaseCommandInteraction<CacheType>,
     }
     const URL = playArg.value
     const isValidLink:boolean = ytdl.validateURL(URL)
+    let fileName = ''
     if (isValidLink) {  //download it, then play to vc
         //TODO check if link has already been downloaded before attempting download
-        ytdl.getInfo(URL).then(async info => {
+        await ytdl.getInfo(URL).then(async info => {
             //printVideoChapters(info)
-            let fileName = getFileName(info)
+            fileName = getFileName(info)
             let a = downloadFromURL(URL, fileName)
-            //appendSongInfo(info).then(async () => {
+            appendSongInfo(info).then(async () => {
                 ;(await a).once('close', async () => {
                     const isFirstSong:boolean = (songQueue.length == 0)
                     //append chapters to queue
                     try {
                         let chapterProcessing = chunkByChapter(fileName, info);
                         if (chapterProcessing) {
+                            console.log("chapterProcessing");
+                            let childCount = 0;
                             (await chapterProcessing).forEach(async (child) => {
-                                await child
+                                console.log("child: ", childCount);
+                                childCount++;
+                                await child.then(async () => {console.log('chapter done')})
                             })
                         }
                         //TODO join vc command
@@ -172,21 +177,22 @@ async function play (interaction:BaseCommandInteraction<CacheType>,
                         }
                         if (isFirstSong) {
                             console.log("only one song in queue")
-                            //await playResource(chunkQueue[0])
                             await playSong(songQueue[0]);
                         }
                     } catch (error) {
                         console.error(error);
                     }
                 })
+            })
         })
 
     }
     else {
+        
         //TODO playing downloaded song by name
     }
     interaction.reply ({
-        content: 'playing',
+        content: ('playing ' + fileName),
         ephemeral: false
     })
 }

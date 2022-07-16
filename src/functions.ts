@@ -338,13 +338,14 @@ async function chunkByChapter(songFile:string, info:ytdl.videoInfo) {
             const child = promisify(() => exec(chapterCommand, (error, stdout, stderr) => {
                 if(error){
                     console.log(`error: ${error.message}`);
-                    // return;
+                    return;
                 }
                 if (stderr) {
-                    console.log(`stderr: ${stderr}`);
+                    //console.log(`stderr: ${stderr}`);
                     // return;
                 }
-                console.log(`stdout: ${stdout}`);
+                //console.log(`stdout: ${stdout}`);
+                return
                 //TODO appendSongQueue after child process finishes
             }))            
             processes.push(child())
