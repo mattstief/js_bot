@@ -312,7 +312,9 @@ async function chunkByChapter(songFile:string, info:ytdl.videoInfo) {
         for (let j = 0; j < chapters.length; j++) {
             const chapterName:string = chapters[j].title
             const chapterStart:number = chapters[j].start_time
+
             let chapterEnd:number
+            //if last chapter, end time is end of source video
             if (j >= (chapters.length - 1)) {
                 chapterEnd = parseInt(info?.videoDetails?.lengthSeconds)
                 console.log("last chapter: " + chapterEnd)
@@ -320,26 +322,30 @@ async function chunkByChapter(songFile:string, info:ytdl.videoInfo) {
             else {
                 chapterEnd = chapters[j + 1]?.start_time
             }
+
             // const chapterFileName = chapterName.replace(' ', '') + audioExt
+
+            //TODO make function for name formatting
             let chapterFileName:string = chapterName.trim()
             while(chapterFileName.includes(' ')) {
                 chapterFileName = chapterFileName.replace(' ', '_')
             }
             chapterFileName = chapterFileName + audioExt
-            const chapterPath:string = './' + musicDir + chapterFileName
 
+            const chapterPath:string = './' + musicDir + chapterFileName
             const chapterCommand:string = 'ffmpeg -i ' + sourceMusic + ' -ss ' + chapterStart + ' -t ' + (chapterEnd-chapterStart) + ' ' + chapterPath
 
             const child = promisify(() => exec(chapterCommand, (error, stdout, stderr) => {
                 if(error){
                     console.log(`error: ${error.message}`);
-                    return;
+                    // return;
                 }
                 if (stderr) {
                     console.log(`stderr: ${stderr}`);
-                    return;
+                    // return;
                 }
-                //console.log(`stdout: ${stdout}`);
+                console.log(`stdout: ${stdout}`);
+                //TODO appendSongQueue after child process finishes
             }))            
             processes.push(child())
             appendSongQueue(chapterFileName)
@@ -347,8 +353,10 @@ async function chunkByChapter(songFile:string, info:ytdl.videoInfo) {
         return processes
     }
     else{
-         //else add the song to the song queue
+         //TODO else add the song to the song queue
+        appendSongQueue(songFile)
         console.log("chapters not found")
+        return []
     }
 }
 

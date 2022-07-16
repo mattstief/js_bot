@@ -105,11 +105,17 @@ function pause(interaction:BaseCommandInteraction<CacheType>) {
 function resume(interaction:BaseCommandInteraction<CacheType>) {
     if(player.playable) {
         player.unpause()
+        interaction.reply ({
+            content: 'resumed',
+            ephemeral: false
+        })
     }
-    interaction.reply ({
-        content: 'resumed',
-        ephemeral: false
-    })
+    else {
+        interaction.reply ({
+            content: 'no song playing',
+            ephemeral: false
+        })
+    }
 }
 
 async function play (interaction:BaseCommandInteraction<CacheType>, 
@@ -142,13 +148,12 @@ async function play (interaction:BaseCommandInteraction<CacheType>,
                     //append chapters to queue
                     try {
                         let chapterProcessing = chunkByChapter(fileName, info);
-                        if(chapterProcessing != null) {
-                            for(const promise in chapterProcessing) {
-                                if(promise != null) {
-                                    await promise
-                                }
-                            }
+                        if (chapterProcessing) {
+                            (await chapterProcessing).forEach(async (child) => {
+                                await child
+                            })
                         }
+                        //TODO join vc command
                         const vc = (await members.fetch(interaction.user.id)).voice.channel
                         if (!vc) {
                             interaction.reply ({
@@ -178,7 +183,7 @@ async function play (interaction:BaseCommandInteraction<CacheType>,
 
     }
     else {
-        //playing downloaded song by name
+        //TODO playing downloaded song by name
     }
     interaction.reply ({
         content: 'playing',
