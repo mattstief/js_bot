@@ -1,20 +1,20 @@
 import ytdl from 'ytdl-core'
-import DiscordJS, {Intents} from 'discord.js'
-import {AudioResource, createAudioPlayer} from '@discordjs/voice'
+import DiscordJS, { Intents } from 'discord.js'
+import { AudioResource, createAudioPlayer } from '@discordjs/voice'
 import dotenv from 'dotenv'
 
 dotenv.config()
 
 let songQueue: Array<string> = []
-let songInfo : Array<ytdl.videoInfo> = []
+let songInfo: Array<ytdl.videoInfo> = []
 let chunkQueue: Array<AudioResource> = []
 
-const title_length  : number = 10
-const chunkTime : number = 10
-const ytdl_options  : ytdl.downloadOptions = {filter: 'audioonly'}
-const musicDir      : string = 'music/'
-const tempDir       : string = 'temp/'
-const audioExt      : string = '.mp3'
+const title_length: number = 10
+const chunkTime: number = 10
+const ytdl_options: ytdl.downloadOptions = { filter: 'audioonly' }
+const musicDir: string = 'music/'
+const tempDir: string = 'temp/'
+const audioExt: string = '.mp3'
 const player = createAudioPlayer()
 const client = new DiscordJS.Client({
     intents: [
@@ -27,15 +27,15 @@ const client = new DiscordJS.Client({
 
 //export all const variables in file
 export {
-	songQueue,
+    songQueue,
     songInfo,
     chunkQueue,
-	title_length,
+    title_length,
     chunkTime,
-	ytdl_options,
-	musicDir,
+    ytdl_options,
+    musicDir,
     tempDir,
     audioExt,
-	player,
-	client
+    player,
+    client
 }

@@ -2,13 +2,13 @@ import ytdl from 'ytdl-core'
 import DiscordJS, { Client, VoiceChannel, Intents, Message, BaseCommandInteraction, CacheType } from 'discord.js';
 import * as fs from 'fs'
 import {
-	joinVoiceChannel,
-	createAudioPlayer,
-	createAudioResource,
-	entersState,
-	StreamType,
-	AudioPlayerStatus,
-	VoiceConnectionStatus,
+    joinVoiceChannel,
+    createAudioPlayer,
+    createAudioResource,
+    entersState,
+    StreamType,
+    AudioPlayerStatus,
+    VoiceConnectionStatus,
     getVoiceConnection,
 } from '@discordjs/voice'
 import {
@@ -24,7 +24,7 @@ import {
     appendSongQueue,
     appendSongInfo,
     appendChunkQueue,
-	getFileName,
+    getFileName,
     sleep,
     createSilentAudioFile,
     chunkSong,
@@ -42,42 +42,42 @@ import {
 } from './globals'
 
 
-function disconnect (interaction:BaseCommandInteraction<CacheType> | null = null) {
+function disconnect(interaction: BaseCommandInteraction<CacheType> | null = null) {
     player.stop()
     const voiceConnection = getVoiceConnection(getGuildEnv())
     getVoiceConnection(getGuildEnv())?.disconnect()
     if (interaction) {
-        interaction.reply ({
+        interaction.reply({
             content: 'disconnected',
             ephemeral: false
         })
     }
 }
 
-function purge (interaction:BaseCommandInteraction<CacheType>) {
+function purge(interaction: BaseCommandInteraction<CacheType>) {
     //TODO check if song is player - if so, either:
     //1) stop it to free the resource
     //2) skip deletion of that song
-    
+
     //TODO free playing resource if any
     const files = fs.readdirSync(musicDir)
     console.log("FILES: ", files)
     for (const file of files) {
-        const isDir:boolean = !file.includes('.')
+        const isDir: boolean = !file.includes('.')
         if (isDir) {
-            fs.rmdirSync(musicDir + file, {recursive: true})
+            fs.rmdirSync(musicDir + file, { recursive: true })
         }
         else {
             fs.unlinkSync(musicDir + file)
         }
     }
-    interaction.reply ({
+    interaction.reply({
         content: 'purged',
         ephemeral: false
     })
 }
 
-function skip(interaction:BaseCommandInteraction<CacheType>) {
+function skip(interaction: BaseCommandInteraction<CacheType>) {
     let songName = skipSong()
     let reply = ''
     if (songName) {
@@ -86,41 +86,41 @@ function skip(interaction:BaseCommandInteraction<CacheType>) {
     else {
         reply = 'no songs in queue'
     }
-    interaction.reply ({
+    interaction.reply({
         content: reply,
         ephemeral: false
     })
 }
 
-function pause(interaction:BaseCommandInteraction<CacheType>) {
+function pause(interaction: BaseCommandInteraction<CacheType>) {
     console.log('pausing')
     player.pause()
     //TODO check if playing
-    interaction.reply ({
+    interaction.reply({
         content: 'paused',
         ephemeral: false
     })
 }
 
-function resume(interaction:BaseCommandInteraction<CacheType>) {
-    if(player.playable) {
+function resume(interaction: BaseCommandInteraction<CacheType>) {
+    if (player.playable) {
         player.unpause()
-        interaction.reply ({
+        interaction.reply({
             content: 'resumed',
             ephemeral: false
         })
     }
     else {
-        interaction.reply ({
+        interaction.reply({
             content: 'no song playing',
             ephemeral: false
         })
     }
 }
 
-async function play (interaction:BaseCommandInteraction<CacheType>, 
-    options:Omit<DiscordJS.CommandInteractionOptionResolver<DiscordJS.CacheType>, 
-    "getMessage" | "getFocused">) {
+async function play(interaction: BaseCommandInteraction<CacheType>,
+    options: Omit<DiscordJS.CommandInteractionOptionResolver<DiscordJS.CacheType>,
+        "getMessage" | "getFocused">) {
     const userGuild = client.guilds.cache.get(getGuildEnv())
     const members = await userGuild?.members
     if (!members || !userGuild?.memberCount) {
@@ -131,11 +131,11 @@ async function play (interaction:BaseCommandInteraction<CacheType>,
     if (playArg == null) {
         return
     }
-    if (!playArg.value || typeof(playArg.value) != 'string') {
+    if (!playArg.value || typeof (playArg.value) != 'string') {
         return
     }
     const URL = playArg.value
-    const isValidLink:boolean = ytdl.validateURL(URL)
+    const isValidLink: boolean = ytdl.validateURL(URL)
     let fileName = ''
     if (isValidLink) {  //download it, then play to vc
         //TODO check if link has already been downloaded before attempting download
@@ -144,8 +144,8 @@ async function play (interaction:BaseCommandInteraction<CacheType>,
             fileName = getFileName(info)
             let a = downloadFromURL(URL, fileName)
             appendSongInfo(info).then(async () => {
-                ;(await a).once('close', async () => {
-                    const isFirstSong:boolean = (songQueue.length == 0)
+                ; (await a).once('close', async () => {
+                    const isFirstSong: boolean = (songQueue.length == 0)
                     //append chapters to queue
                     try {
                         let chapterProcessing = chunkByChapter(fileName, info);
@@ -155,13 +155,13 @@ async function play (interaction:BaseCommandInteraction<CacheType>,
                             (await chapterProcessing).forEach(async (child) => {
                                 console.log("child: ", childCount);
                                 childCount++;
-                                await child.then(async () => {console.log('chapter done')})
+                                await child.then(async () => { console.log('chapter done') })
                             })
                         }
                         //TODO join vc command
                         const vc = (await members.fetch(interaction.user.id)).voice.channel
                         if (!vc) {
-                            interaction.reply ({
+                            interaction.reply({
                                 content: 'not in a voice channel',
                                 ephemeral: false
                             })
@@ -188,23 +188,23 @@ async function play (interaction:BaseCommandInteraction<CacheType>,
 
     }
     else {
-        
+
         //TODO playing downloaded song by name
     }
-    interaction.reply ({
+    interaction.reply({
         content: ('playing ' + fileName),
         ephemeral: false
     })
 }
 
-function ping(interaction:BaseCommandInteraction<CacheType>) {
-    interaction.reply ({
+function ping(interaction: BaseCommandInteraction<CacheType>) {
+    interaction.reply({
         content: 'pongers',
         ephemeral: false
     })
 }
 
-function seek(interaction:BaseCommandInteraction<CacheType>) {
+function seek(interaction: BaseCommandInteraction<CacheType>) {
     /*TODO implement seek
     ffmpeg could enable this, see here https://trac.ffmpeg.org/wiki/Seeking
     but it feels a bit janky since the AudioPlayer utilizes ffmpeg to play the song, 
@@ -214,20 +214,20 @@ function seek(interaction:BaseCommandInteraction<CacheType>) {
     during download, then save the chapters as separate resources, and seek to the chapter.
     */
     console.log(client.voice.adapters.get('resource'))
-    interaction.reply ({
+    interaction.reply({
         content: 'seeked',
         ephemeral: false
     })
 }
 
-function test(interaction:BaseCommandInteraction<CacheType>, 
-    options:Omit<DiscordJS.CommandInteractionOptionResolver<DiscordJS.CacheType>, 
-    "getMessage" | "getFocused">) {
+function test(interaction: BaseCommandInteraction<CacheType>,
+    options: Omit<DiscordJS.CommandInteractionOptionResolver<DiscordJS.CacheType>,
+        "getMessage" | "getFocused">) {
 
     const arg1 = Number(options.get("number")?.value)
     //console.log("number: ", arg1)
 
-    let arg2:string
+    let arg2: string
     if (options.get("string") == null) {
         arg2 = "mt"
     }
@@ -236,7 +236,7 @@ function test(interaction:BaseCommandInteraction<CacheType>,
     }
 
     //console.log("string: ", arg2)
-    interaction.reply ({
+    interaction.reply({
         content: createSilentAudioFile(arg1, arg2),
         ephemeral: false
     })
@@ -244,9 +244,9 @@ function test(interaction:BaseCommandInteraction<CacheType>,
 
 export {
     disconnect,
-	purge,
-	skip, 
-	play,
+    purge,
+    skip,
+    play,
     ping,
     pause,
     resume,

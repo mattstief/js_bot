@@ -1,13 +1,13 @@
 import DiscordJS from 'discord.js'
-import {addExitCallback} from 'catch-exit'
+import { addExitCallback } from 'catch-exit'
 import {
-	joinVoiceChannel,
-	createAudioPlayer,
-	createAudioResource,
-	entersState,
-	StreamType,
-	AudioPlayerStatus,
-	VoiceConnectionStatus,
+    joinVoiceChannel,
+    createAudioPlayer,
+    createAudioResource,
+    entersState,
+    StreamType,
+    AudioPlayerStatus,
+    VoiceConnectionStatus,
     getVoiceConnection,
 } from '@discordjs/voice'
 import {
@@ -19,7 +19,7 @@ import {
     playSong,
     makeDirectory,
     appendSongQueue,
-	getFileName,
+    getFileName,
     sleep,
     createSilentAudioFile,
     skipChunk
@@ -36,9 +36,9 @@ import {
 } from './globals'
 import {
     disconnect,
-	purge,
-	skip, 
-	play,
+    purge,
+    skip,
+    play,
     ping,
     pause,
     resume,
@@ -60,7 +60,7 @@ addExitCallback((signal) => {
 })
 
 async function stateEvent() {
-    switch(player.state.status) {
+    switch (player.state.status) {
         case AudioPlayerStatus.Playing:
             console.log("playing")
             break;
@@ -84,7 +84,7 @@ async function stateEvent() {
 }
 
 async function readyEvent() {
-    try {    
+    try {
         makeDirectory(musicDir)
         makeDirectory(tempDir)
         const guild = client.guilds.cache.get(getGuildEnv())
@@ -116,9 +116,9 @@ async function readyEvent() {
         commands?.create({
             name: 'skip',
             description: 'skips current song',
-            
+
         })
-        
+
         commands?.create({
             name: 'pause',
             description: 'pauses current song',
@@ -166,17 +166,17 @@ async function readyEvent() {
                 }
             ]
         })
-    }   catch (error) {
+    } catch (error) {
         console.log(error)
     }
 }
 
-async function interactionEvent(interaction:DiscordJS.Interaction<DiscordJS.CacheType>) {
+async function interactionEvent(interaction: DiscordJS.Interaction<DiscordJS.CacheType>) {
     try {
-        if(!interaction.isCommand()) {
+        if (!interaction.isCommand()) {
             return
         }
-        const {commandName, options} = interaction
+        const { commandName, options } = interaction
         switch (commandName) {
             case 'ping':
                 ping(interaction)
@@ -209,7 +209,7 @@ async function interactionEvent(interaction:DiscordJS.Interaction<DiscordJS.Cach
                 console.log("unknown command")
                 break
         }
-    }   catch (error) {
+    } catch (error) {
         console.log(error)
     }
 }

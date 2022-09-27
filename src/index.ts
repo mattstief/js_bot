@@ -14,4 +14,4 @@ client.on('ready', () => readyEvent())
 
 client.on('interactionCreate', (interaction) => interactionEvent(interaction))
 
-let x:Promise<string> = client.login(process.env.TOKEN)
+let x: Promise<string> = client.login(process.env.TOKEN)

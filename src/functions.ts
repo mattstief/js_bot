@@ -1,14 +1,14 @@
 import ytdl from 'ytdl-core'
 import DiscordJS from 'discord.js';
-import {promisify} from 'util'
+import { promisify } from 'util'
 import {
-	joinVoiceChannel,
-	createAudioPlayer,
-	createAudioResource,
-	entersState,
-	StreamType,
-	AudioPlayerStatus,
-	VoiceConnectionStatus,
+    joinVoiceChannel,
+    createAudioPlayer,
+    createAudioResource,
+    entersState,
+    StreamType,
+    AudioPlayerStatus,
+    VoiceConnectionStatus,
     getVoiceConnection,
     AudioPlayer,
     AudioResource,
@@ -29,7 +29,7 @@ import {
     client
 } from './globals'
 import { disconnect } from './commands'
-import {exec} from 'child_process'
+import { exec } from 'child_process'
 
 async function exitCallback() {
     //const voiceConnection = getVoiceConnection(getGuildEnv())
@@ -52,7 +52,7 @@ async function connectToChannel(channel: DiscordJS.VoiceBasedChannel) {
         }
         const connection = joinVoiceChannel({
             channelId: channel.id,
-            guildId: channel.guild.id, 
+            guildId: channel.guild.id,
             adapterCreator: createDiscordJSAdapter(voice),
         });
         try {
@@ -82,7 +82,7 @@ async function downloadFromURL(url: string, fileName: string) {
 function printVideoChapters(info: ytdl.videoInfo) {
     const chapters = info.videoDetails.chapters
     console.log("video has " + chapters.length + " chapters")
-    for(const chapter of chapters) {
+    for (const chapter of chapters) {
         console.log(chapter.title + chapter.start_time)
     }
 }
@@ -121,7 +121,7 @@ function playSong(fileName: string) {
     console.log("playing song " + fileName)
     console.log("songQueue length: " + songQueue.length)
     // console.log("songQueue: " + songQueue)
-    const filePath:string = './' + musicDir + fileName
+    const filePath: string = './' + musicDir + fileName
     try {
         //appendSongQueue(fileName)
         const resource = createAudioResource(filePath, {
@@ -132,10 +132,10 @@ function playSong(fileName: string) {
     catch (error) {
         console.error(error);
     }
-	return entersState(player, AudioPlayerStatus.Playing, 5e3);
+    return entersState(player, AudioPlayerStatus.Playing, 5e3);
 }
 
-function getResource(songPath:string){
+function getResource(songPath: string) {
     try {
         return createAudioResource(songPath, {
             inputType: StreamType.Opus
@@ -147,12 +147,12 @@ function getResource(songPath:string){
     return null
 }
 
-function playResource(resource:AudioResource) {
+function playResource(resource: AudioResource) {
     try {
         player.play(resource)
         const delay = 6
-        const chunkms = (chunkTime * 1000) - delay 
-        const x = resource.playStream.readableLength 
+        const chunkms = (chunkTime * 1000) - delay
+        const x = resource.playStream.readableLength
         //const durationMeta = resource?.edges
         //const durationMeta = resource?.
         //console.log("chunktime: ", durationMeta)
@@ -174,7 +174,7 @@ function getFileName(info: ytdl.videoInfo, fileExt: string = audioExt, substring
     let runningCount = 0
     let i = 0
     let fileName = ''
-    while((runningCount < substring_len) && (i < titleDelimed.length)) {
+    while ((runningCount < substring_len) && (i < titleDelimed.length)) {
         runningCount += titleDelimed[i].length
         fileName += titleDelimed[i]
         i++
@@ -184,13 +184,13 @@ function getFileName(info: ytdl.videoInfo, fileExt: string = audioExt, substring
     return fileName
 }
 
-function makeDirectory(dirName:string|undefined) {
+function makeDirectory(dirName: string | undefined) {
     if (dirName == null) {
         return
     }
     fs.mkdir(dirName, (err) => {
         if (err && err.code == 'EEXIST') {
-        } else if (err){
+        } else if (err) {
             console.log(err.code)
         } else {
             console.log('path \"' + dirName + '\" not found. Created new directory.')
@@ -199,30 +199,30 @@ function makeDirectory(dirName:string|undefined) {
 }
 
 async function appendSongQueue(songName: string) {
-    const fileExits:boolean = fs.existsSync(musicDir + songName)
+    const fileExits: boolean = fs.existsSync(musicDir + songName)
     if (fileExits) {
         songQueue.push(songName)
     }
 }
 
 async function appendSongInfo(info: ytdl.videoInfo) {
-    const validInfo:boolean = (info.videoDetails != null)
+    const validInfo: boolean = (info.videoDetails != null)
     if (validInfo) {
         songInfo.push(info)
     }
 }
 
 async function appendChunkQueue(dirName: string) {
-    const songdir:string = dirName.split('.')[0] + '/'
-    const dirPath:string = './' + musicDir + songdir
+    const songdir: string = dirName.split('.')[0] + '/'
+    const dirPath: string = './' + musicDir + songdir
     console.log("dirPath: " + dirPath)
     fs.readdir(dirPath, (err, files) => {
         if (files != null) {
-            for(const file of files) {
-                const strPath:string = dirPath + file
-                const resource:AudioResource|null = getResource(strPath)
+            for (const file of files) {
+                const strPath: string = dirPath + file
+                const resource: AudioResource | null = getResource(strPath)
                 if (resource != null) {
-                    const validResource:boolean = (resource.playStream.readable)
+                    const validResource: boolean = (resource.playStream.readable)
                     if (validResource) {
                         chunkQueue.push(resource)
                     }
@@ -232,7 +232,7 @@ async function appendChunkQueue(dirName: string) {
                 }
             }
         }
-        else{
+        else {
             console.log("no files found in song dir")
         }
     })
@@ -242,11 +242,11 @@ function sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-function createSilentAudioFile(duration:number, name:string) {
+function createSilentAudioFile(duration: number, name: string) {
     // https://iqcode.com/code/javascript/run-command-line-using-javascript
     //console.log("name: " + name + ".flac")
     exec('rm temp/*.flac', (error, stdout, stderr) => {
-        if(error){
+        if (error) {
             console.log(`error: ${error.message}`)
             return
         }
@@ -260,7 +260,7 @@ function createSilentAudioFile(duration:number, name:string) {
     const command = 'ffmpeg -i src/silent_quarter-second.flac -af apad=pad_dur=' + duration + 's temp/' + name + '.flac'
 
     exec(command, (error, stdout, stderr) => {
-        if(error){
+        if (error) {
             console.log(`error: ${error.message}`)
             return
         }
@@ -279,7 +279,7 @@ function createSilentAudioFile(duration:number, name:string) {
     return name + duration
 }
 
-function chunkSong(fileName:string) {
+function chunkSong(fileName: string) {
     console.log("chunking song " + fileName)
     //`ffmpeg -i "input_audio_file.mp3" -f segment -segment_time 3600 -c copy output_audio_file_%03d.mp3`
     const chunksDir = fileName.split('.')[0] + '/'
@@ -289,9 +289,9 @@ function chunkSong(fileName:string) {
     //const command = 'ffmpeg -i ' + input + ' -f segment -segment_time ' + chunkTime + ' -c copy -shortest ' + output
     const command = 'ffmpeg -i ./' + musicDir + fileName + ' -f segment -segment_time ' + chunkTime + ' ./' + musicDir + chunksDir + '%03d' + audioExt
     const child = exec(command, (error, stdout, stderr) => {
-        if(error){
+        if (error) {
             console.log(`error: ${error.message}`)
-            return 
+            return
         }
         if (stderr) {
             console.log(`stderr: ${stderr}`)
@@ -302,18 +302,18 @@ function chunkSong(fileName:string) {
     return child
 }
 
-async function chunkByChapter(songFile:string, info:ytdl.videoInfo) {
+async function chunkByChapter(songFile: string, info: ytdl.videoInfo) {
     const chapters = info?.videoDetails?.chapters
     if (chapters.length > 0) {
         console.log("chapters found")
-        let processes:Promise<unknown>[] = [] //array of child processes
-        const sourceMusic:string = './' + musicDir + songFile
+        let processes: Promise<unknown>[] = [] //array of child processes
+        const sourceMusic: string = './' + musicDir + songFile
         //split song into chunks by chapter
         for (let j = 0; j < chapters.length; j++) {
-            const chapterName:string = chapters[j].title
-            const chapterStart:number = chapters[j].start_time
+            const chapterName: string = chapters[j].title
+            const chapterStart: number = chapters[j].start_time
 
-            let chapterEnd:number
+            let chapterEnd: number
             //if last chapter, end time is end of source video
             if (j >= (chapters.length - 1)) {
                 chapterEnd = parseInt(info?.videoDetails?.lengthSeconds)
@@ -326,17 +326,17 @@ async function chunkByChapter(songFile:string, info:ytdl.videoInfo) {
             // const chapterFileName = chapterName.replace(' ', '') + audioExt
 
             //TODO make function for name formatting
-            let chapterFileName:string = chapterName.trim()
-            while(chapterFileName.includes(' ')) {
+            let chapterFileName: string = chapterName.trim()
+            while (chapterFileName.includes(' ')) {
                 chapterFileName = chapterFileName.replace(' ', '_')
             }
             chapterFileName = chapterFileName + audioExt
 
-            const chapterPath:string = './' + musicDir + chapterFileName
-            const chapterCommand:string = 'ffmpeg -i ' + sourceMusic + ' -ss ' + chapterStart + ' -t ' + (chapterEnd-chapterStart) + ' ' + chapterPath
+            const chapterPath: string = './' + musicDir + chapterFileName
+            const chapterCommand: string = 'ffmpeg -i ' + sourceMusic + ' -ss ' + chapterStart + ' -t ' + (chapterEnd - chapterStart) + ' ' + chapterPath
 
             const child = promisify(() => exec(chapterCommand, (error, stdout, stderr) => {
-                if(error){
+                if (error) {
                     console.log(`error: ${error.message}`);
                     return;
                 }
@@ -347,14 +347,14 @@ async function chunkByChapter(songFile:string, info:ytdl.videoInfo) {
                 //console.log(`stdout: ${stdout}`);
                 return
                 //TODO appendSongQueue after child process finishes
-            }))            
+            }))
             processes.push(child())
             appendSongQueue(chapterFileName)
         }
         return processes
     }
-    else{
-         //TODO else add the song to the song queue
+    else {
+        //TODO else add the song to the song queue
         appendSongQueue(songFile)
         console.log("chapters not found")
         return []
@@ -377,7 +377,7 @@ export {
     appendSongQueue,
     appendSongInfo,
     appendChunkQueue,
-	getFileName,
+    getFileName,
     sleep,
     createSilentAudioFile,
     chunkSong,
