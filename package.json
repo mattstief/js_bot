@@ -1,5 +1,5 @@
 {
-  "name": "js_bot",
+  "name": "js_bot", 
   "version": "1.0.0",
   "description": "discord music bot",
   "main": "src/index.ts",
