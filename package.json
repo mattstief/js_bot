@@ -5,7 +5,8 @@
   "main": "src/index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon --verbose --signal SIGINT --ignore src/index.ts --ignore music/ --ignore temp/"
+    "dev": "nodemon --verbose --signal SIGINT --ignore src/index.ts --ignore music/ --ignore temp/",
+    "precommit": "npm version patch && git add package.json"
   },
   "repository": {
     "type": "git",
@@ -36,11 +37,14 @@
     "ffmetadata": "^1.7.0",
     "ffmpeg-static": "^4.4.1",
     "libsodium-wrappers": "^0.7.10",
-    "nodemon": "^2.0.16",
+    "nodemon": "^2.0.20",
     "opusscript": "^0.0.8",
     "sodium": "^3.0.2",
     "sodium-native": "^3.3.0",
     "tweetnacl": "^1.0.3",
     "ytdl": "^1.4.1"
+  },
+  "devDependencies": {
+    "pre-commit": "^1.2.2"
   }
 }
